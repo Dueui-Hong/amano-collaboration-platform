@@ -21,8 +21,10 @@ const SECRET = new TextEncoder().encode(
  */
 export async function verifyTokenEdge(token: string): Promise<JWTPayload | null> {
   try {
+    console.log('[JWT Edge] Verifying token:', token.substring(0, 50) + '...');
     const parts = token.split('.');
     if (parts.length !== 3) {
+      console.log('[JWT Edge] Invalid token format');
       return null;
     }
 
@@ -49,8 +51,10 @@ export async function verifyTokenEdge(token: string): Promise<JWTPayload | null>
     );
 
     if (!valid) {
+      console.log('[JWT Edge] Signature verification failed');
       return null;
     }
+    console.log('[JWT Edge] Signature verified');
 
     // Payload 디코딩
     const payloadStr = new TextDecoder().decode(base64UrlDecode(payloadB64));
@@ -58,9 +62,11 @@ export async function verifyTokenEdge(token: string): Promise<JWTPayload | null>
 
     // 만료 확인
     if (payload.exp && payload.exp * 1000 < Date.now()) {
+      console.log('[JWT Edge] Token expired:', payload.exp);
       return null;
     }
 
+    console.log('[JWT Edge] Token valid:', payload);
     return payload;
   } catch (error) {
     console.error('JWT verification failed:', error);
