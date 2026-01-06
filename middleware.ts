@@ -1,10 +1,10 @@
 // ============================================
-// Next.js Middleware - RBAC 및 JWT 인증
+// Next.js Middleware - RBAC 및 JWT 인증 (Edge Runtime)
 // ============================================
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt';
+import { verifyTokenEdge } from '@/lib/auth/jwt-edge';
 
 // 인증이 필요한 경로
 const PROTECTED_ROUTES = [
@@ -42,10 +42,10 @@ export async function middleware(request: NextRequest) {
   const tokenCookie = request.cookies.get('token');
   const token = tokenCookie?.value;
 
-  // JWT 토큰 검증
+  // JWT 토큰 검증 (Edge Runtime용)
   let userPayload = null;
   if (token) {
-    userPayload = await verifyToken(token);
+    userPayload = await verifyTokenEdge(token);
   }
 
   // 1. 인증이 필요한 경로 체크
