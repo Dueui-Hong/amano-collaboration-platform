@@ -1,5 +1,5 @@
 // ============================================
-// Next.js Middleware - RBAC 및 인증 처리 (쿠키 세션)
+// Next.js Middleware - RBAC 및 인증 처리 (보안 강화)
 // ============================================
 
 import { NextResponse } from 'next/server';
@@ -39,7 +39,26 @@ export async function middleware(request: NextRequest) {
 
   // 쿠키에서 세션 정보 가져오기
   const userSessionCookie = request.cookies.get('user_session');
-  const userSession = userSessionCookie ? JSON.parse(userSessionCookie.value) : null;
+  const userIdCookie = request.cookies.get('user_id');
+
+  // 보안 강화: 두 쿠키가 모두 있어야 인증된 것으로 간주
+  let userSession = null;
+  if (userSessionCookie && userIdCookie) {
+    try {
+      userSession = JSON.parse(userSessionCookie.value);
+      
+      // 세션 유효성 검증
+      if (!userSession.id || userSession.id !== userIdCookie.value) {
+        // 세션과 user_id가 일치하지 않으면 세션 무효화
+        console.warn('Session validation failed: ID mismatch');
+        userSession = null;
+      }
+    } catch (error) {
+      // JSON 파싱 실패 시 세션 무효화
+      console.error('Session parsing failed:', error);
+      userSession = null;
+    }
+  }
 
   // 1. 인증이 필요한 경로 체크
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
@@ -50,7 +69,12 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
+    
+    // 세션이 유효하지 않으면 쿠키 삭제
+    const response = NextResponse.redirect(url);
+    response.cookies.delete('user_id');
+    response.cookies.delete('user_session');
+    return response;
   }
 
   // 2. 로그인한 사용자는 로그인 페이지 접근 불가
@@ -74,6 +98,7 @@ export async function middleware(request: NextRequest) {
     if (isAdminRoute && userRole !== 'DEPARTMENT_HEAD') {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
+      url.searchParams.set('error', 'unauthorized');
       return NextResponse.redirect(url);
     }
 
@@ -89,6 +114,7 @@ export async function middleware(request: NextRequest) {
     ) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
+      url.searchParams.set('error', 'unauthorized');
       return NextResponse.redirect(url);
     }
   }

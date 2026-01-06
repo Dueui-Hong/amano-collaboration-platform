@@ -60,10 +60,23 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
+      const response = await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include', // 쿠키 포함
+      });
+      
+      if (response.ok) {
+        // 로그아웃 성공 시 로그인 페이지로 이동
+        window.location.href = '/login';
+      } else {
+        console.error('Logout failed:', await response.text());
+        // 실패해도 로그인 페이지로 이동 (클라이언트 쿠키 삭제)
+        window.location.href = '/login';
+      }
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout error:', error);
+      // 에러 발생 시에도 로그인 페이지로 이동
+      window.location.href = '/login';
     }
   };
 

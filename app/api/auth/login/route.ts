@@ -116,9 +116,9 @@ export async function POST(request: NextRequest) {
 
     // 세션 쿠키에 사용자 ID 저장
     response.cookies.set('user_id', user.id, {
-      httpOnly: true,
-      secure: true, // HTTPS에서만 작동
-      sameSite: 'lax',
+      httpOnly: true, // XSS 방지: JavaScript로 접근 불가
+      secure: true, // HTTPS에서만 전송
+      sameSite: 'strict', // CSRF 방지: 같은 사이트에서만 쿠키 전송
       maxAge: 60 * 60 * 24 * 7, // 7일
       path: '/',
     });
@@ -129,9 +129,9 @@ export async function POST(request: NextRequest) {
       role: user.role,
       team: user.team,
     }), {
-      httpOnly: true,
-      secure: true, // HTTPS에서만 작동
-      sameSite: 'lax',
+      httpOnly: true, // XSS 방지: JavaScript로 접근 불가
+      secure: true, // HTTPS에서만 전송
+      sameSite: 'strict', // CSRF 방지: 같은 사이트에서만 쿠키 전송
       maxAge: 60 * 60 * 24 * 7, // 7일
       path: '/',
     });
