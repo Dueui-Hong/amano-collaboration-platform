@@ -39,7 +39,13 @@ export async function createToken(payload: Omit<JWTPayload, 'exp'>): Promise<str
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as JWTPayload;
+    return {
+      userId: payload.userId as string,
+      employeeId: payload.employeeId as string,
+      role: payload.role as string,
+      team: payload.team as string,
+      exp: payload.exp,
+    };
   } catch (error) {
     console.error('JWT verification failed:', error);
     return null;

@@ -44,7 +44,7 @@ export async function verifyTokenEdge(token: string): Promise<JWTPayload | null>
     const valid = await crypto.subtle.verify(
       'HMAC',
       key,
-      signatureBytes,
+      signatureBytes.buffer as ArrayBuffer,
       dataEncoded
     );
 
