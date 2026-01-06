@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
         .from('users')
         .select('role, team')
         .eq('id', user.id)
-        .single();
+        .single() as any;
 
       if (error || !userData) {
         const url = request.nextUrl.clone();
@@ -81,7 +81,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
 
-      const userRole = userData.role;
+      const userRole = userData.role as string;
 
       // 부서장 전용 경로 체크
       const isAdminRoute = ADMIN_ONLY_ROUTES.some((route) =>

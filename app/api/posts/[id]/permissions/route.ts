@@ -17,7 +17,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
 
     // 현재 사용자 확인
     const {
@@ -119,7 +119,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
     const body = await request.json();
 
     const { user_ids } = body;
@@ -249,7 +249,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
 

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
 
     // 사용자 조회
     const { data: user, error: userError } = await supabase

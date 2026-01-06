@@ -9,7 +9,7 @@ import type { ApiResponse } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
 
     // 현재 사용자 확인
     const {

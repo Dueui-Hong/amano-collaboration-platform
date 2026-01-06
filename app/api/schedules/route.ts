@@ -12,7 +12,7 @@ import type { ApiResponse, Schedule } from '@/types';
 // GET - 일정 목록 조회
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
     const { searchParams } = new URL(request.url);
 
     // 현재 사용자 확인
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
 // POST - 일정 생성
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
     const body = await request.json();
 
     const { title, description, start_date, end_date, type, color } = body;

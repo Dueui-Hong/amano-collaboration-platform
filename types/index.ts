@@ -362,22 +362,3 @@ export type DeepPartial<T> = {
 export type Nullable<T> = T | null;
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-
-// ============================================
-// NextAuth Types Extension
-// ============================================
-declare module 'next-auth' {
-  interface Session {
-    user: UserWithoutSensitive;
-    accessToken: string;
-  }
-
-  interface User extends UserWithoutSensitive {}
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    user: UserWithoutSensitive;
-    accessToken: string;
-  }
-}

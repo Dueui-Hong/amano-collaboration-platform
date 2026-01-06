@@ -17,7 +17,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
 
     // 현재 사용자 확인
     const {
@@ -119,7 +119,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
     const body = await request.json();
 
     const { this_week_work, next_week_plan, issues } = body;
@@ -241,7 +241,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
 
     // 현재 사용자 확인
     const {

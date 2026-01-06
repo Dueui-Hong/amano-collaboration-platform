@@ -9,7 +9,7 @@ import type { ApiResponse } from '@/types';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
 
     // 현재 인증된 사용자 확인
     const {
@@ -50,7 +50,7 @@ export async function GET() {
     }
 
     // 민감 정보 제거
-    const { password_hash, ...userWithoutPassword } = user;
+    const { password_hash, ...userWithoutPassword } = user as any;
 
     return NextResponse.json<ApiResponse>(
       {

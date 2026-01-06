@@ -12,7 +12,7 @@ import type { ApiResponse, WeeklyReport, ReportFilterParams } from '@/types';
 // GET - 보고서 목록 조회
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
     const { searchParams } = new URL(request.url);
 
     // 현재 사용자 확인
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
           page,
           limit,
           total_pages: Math.ceil((count || 0) / limit),
-        },
+        } as any,
       },
       { status: 200 }
     );
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
 // POST - 보고서 생성
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient() as any;
     const body = await request.json();
 
     const {
