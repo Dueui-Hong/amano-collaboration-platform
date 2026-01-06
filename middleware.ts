@@ -24,7 +24,7 @@ const ADMIN_ONLY_ROUTES = ['/admin', '/settings/system'];
 const TEAM_LEADER_ROUTES = ['/reports/review', '/posts/permissions'];
 
 // 로그인한 사용자는 접근 불가능한 경로
-const AUTH_ROUTES = ['/login', '/'];
+const AUTH_ROUTES = ['/login'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
