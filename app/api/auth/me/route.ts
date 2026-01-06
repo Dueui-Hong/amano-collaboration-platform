@@ -1,22 +1,20 @@
 // ============================================
-// Get Current User API Route
+// Get Current User API Route (쿠키 세션 방식)
 // GET /api/auth/me
 // ============================================
 
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import type { ApiResponse } from '@/types';
 
 export async function GET() {
   try {
-    const supabase = await createClient() as any;
+    // 쿠키에서 사용자 ID 가져오기
+    const cookieStore = await cookies();
+    const userIdCookie = cookieStore.get('user_id');
 
-    // 현재 인증된 사용자 확인
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-
-    if (!authUser) {
+    if (!userIdCookie) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
@@ -29,14 +27,18 @@ export async function GET() {
       );
     }
 
-    // DB에서 사용자 정보 조회
+    const userId = userIdCookie.value;
+    const supabase = await createClient() as any;
+
+    // DB에서 사용자 정보 조회 (서비스 역할 키 사용)
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', authUser.id)
+      .eq('id', userId)
       .single();
 
     if (error || !user) {
+      console.error('User fetch error:', error);
       return NextResponse.json<ApiResponse>(
         {
           success: false,
