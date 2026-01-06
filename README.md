@@ -57,44 +57,58 @@
 ```
 webapp/
 ├── app/
-│   ├── api/                      # API Routes
-│   │   ├── auth/                 # 인증 API
-│   │   │   ├── login/route.ts
-│   │   │   ├── logout/route.ts
-│   │   │   └── me/route.ts
-│   │   ├── reports/              # 보고서 API
-│   │   ├── schedules/            # 일정 API
-│   │   ├── posts/                # 게시물 API
-│   │   └── settings/             # 시스템 설정 API
-│   ├── dashboard/                # 대시보드 페이지
-│   │   ├── layout.tsx            # 레이아웃 (사이드바 포함)
-│   │   └── page.tsx              # 메인 대시보드
-│   ├── login/                    # 로그인 페이지
-│   │   └── page.tsx
-│   ├── reports/                  # 보고서 페이지
-│   ├── schedules/                # 일정 페이지
-│   ├── posts/                    # 게시판 페이지
-│   └── settings/                 # 설정 페이지
+│   ├── api/                                # API Routes (13개)
+│   │   ├── auth/                           # 인증 API (3개)
+│   │   │   ├── login/route.ts             # ✅ 로그인
+│   │   │   ├── logout/route.ts            # ✅ 로그아웃
+│   │   │   └── me/route.ts                # ✅ 현재 사용자
+│   │   ├── reports/                        # 주간 보고서 API (4개)
+│   │   │   ├── route.ts                   # ✅ 목록/생성
+│   │   │   └── [id]/
+│   │   │       ├── route.ts               # ✅ 조회/수정/삭제
+│   │   │       ├── submit/route.ts        # ✅ 제출
+│   │   │       └── review/route.ts        # ✅ 검토
+│   │   ├── schedules/                      # 일정 관리 API (2개)
+│   │   │   ├── route.ts                   # ✅ 목록/생성
+│   │   │   └── [id]/route.ts              # ✅ 조회/수정/삭제
+│   │   ├── posts/                          # 게시판 API (3개)
+│   │   │   ├── route.ts                   # ✅ 목록/생성
+│   │   │   └── [id]/
+│   │   │       ├── route.ts               # ✅ 조회/수정/삭제
+│   │   │       └── permissions/route.ts   # ✅ 권한 관리
+│   │   └── upload/                         # 파일 업로드 API (1개)
+│   │       └── route.ts                   # ✅ 파일 업로드
+│   ├── dashboard/                          # 대시보드 페이지
+│   │   ├── layout.tsx                     # ✅ 레이아웃 (사이드바)
+│   │   └── page.tsx                       # ✅ 메인 대시보드
+│   ├── login/                              # 로그인 페이지
+│   │   └── page.tsx                       # ✅ 로그인
+│   ├── reports/                            # 보고서 페이지 (TODO)
+│   ├── schedules/                          # 일정 페이지 (TODO)
+│   ├── posts/                              # 게시판 페이지 (TODO)
+│   └── settings/                           # 설정 페이지 (TODO)
 ├── lib/
-│   ├── auth/                     # 인증 유틸리티
-│   │   ├── permissions.ts        # RBAC 권한 체크
-│   │   └── utils.ts              # 인증 헬퍼 함수
-│   └── supabase/                 # Supabase 클라이언트
-│       ├── client.ts             # 브라우저 클라이언트
-│       ├── server.ts             # 서버 클라이언트
-│       └── middleware.ts         # 미들웨어 클라이언트
+│   ├── auth/                               # 인증 유틸리티
+│   │   ├── permissions.ts                 # ✅ RBAC 권한 체크
+│   │   └── utils.ts                       # ✅ 인증 헬퍼 함수
+│   └── supabase/                           # Supabase 클라이언트
+│       ├── client.ts                      # ✅ 브라우저 클라이언트
+│       ├── server.ts                      # ✅ 서버 클라이언트
+│       └── middleware.ts                  # ✅ 미들웨어 클라이언트
 ├── types/
-│   ├── index.ts                  # 공통 타입 정의
-│   └── supabase.ts               # Supabase DB 타입
+│   ├── index.ts                           # ✅ 공통 타입 정의
+│   └── supabase.ts                        # ✅ Supabase DB 타입
 ├── supabase/
-│   ├── migrations/               # SQL 마이그레이션
-│   │   └── 001_initial_schema.sql
-│   └── seed.sql                  # 시드 데이터
-├── docs/
-│   └── DATABASE_ERD.md           # ERD 문서
-├── middleware.ts                 # Next.js 미들웨어 (RBAC)
-├── .env.local.example            # 환경 변수 예시
-└── README.md                     # 이 파일
+│   ├── migrations/                         # SQL 마이그레이션
+│   │   └── 001_initial_schema.sql         # ✅ 초기 스키마
+│   └── seed.sql                           # ✅ 시드 데이터
+├── docs/                                   # 문서
+│   ├── DATABASE_ERD.md                    # ✅ ERD 문서
+│   ├── DEPLOYMENT_GUIDE.md                # ✅ 배포 가이드
+│   └── DEVELOPMENT_GUIDE.md               # ✅ 개발 가이드
+├── middleware.ts                           # ✅ Next.js 미들웨어 (RBAC)
+├── .env.local.example                      # ✅ 환경 변수 예시
+└── README.md                               # ✅ 이 파일
 ```
 
 ---
@@ -243,12 +257,46 @@ const data = await response.json();
 
 ---
 
-## 🛠 향후 개발 계획
+## ✅ 구현 완료 기능 (Phase 1)
 
-- [ ] 주간 보고서 전체 CRUD API 구현
-- [ ] 일정 관리 시스템 (react-big-calendar 통합)
-- [ ] 게시판 전체 기능 구현
-- [ ] 파일 업로드 (Supabase Storage)
+### 주간 보고서 시스템
+- ✅ 보고서 생성/조회/수정/삭제 API
+- ✅ 보고서 제출 API (DRAFT → SUBMITTED)
+- ✅ 보고서 검토 API (팀장: APPROVED/REJECTED)
+- ✅ 권한 기반 필터링 (본인/팀/전체)
+
+### 일정 관리 시스템
+- ✅ 일정 생성/조회/수정/삭제 API
+- ✅ PUBLIC/PRIVATE 일정 분리
+- ✅ 팀장 이상만 PUBLIC 일정 생성 가능
+
+### 게시판 시스템
+- ✅ 게시물 생성/조회/수정/삭제 API
+- ✅ 게시물 권한 관리 API (부여/해제/목록)
+- ✅ 공개/비공개 설정
+- ✅ 카테고리 및 검색 필터
+
+### 파일 업로드 시스템
+- ✅ Supabase Storage 연동
+- ✅ 파일 크기 제한 (10MB)
+- ✅ 파일 형식 검증
+- ✅ 공개 URL 자동 생성
+
+### API 통계
+- **총 13개 API Route** 완전 구현
+  - 인증: 3개 (로그인, 로그아웃, 현재사용자)
+  - 주간보고서: 4개 (CRUD + 제출 + 검토)
+  - 일정관리: 2개 (CRUD)
+  - 게시판: 3개 (CRUD + 권한관리)
+  - 파일업로드: 1개
+
+## 🚧 향후 개발 계획 (Phase 2)
+
+- [ ] 프론트엔드 UI 페이지 구현
+  - 주간 보고서 목록/작성/상세/검토 페이지
+  - 일정 관리 캘린더 (react-big-calendar)
+  - 게시판 목록/작성/상세 페이지
+- [ ] Admin CMS 설정 페이지
 - [ ] 실시간 알림 (Supabase Realtime)
 - [ ] 모바일 반응형 최적화
 - [ ] 다크 모드 지원
