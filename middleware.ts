@@ -4,7 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyTokenEdge } from '@/lib/auth/jwt-edge';
+import { jwtVerify } from 'jose';
 
 // 인증이 필요한 경로
 const PROTECTED_ROUTES = [
@@ -42,10 +42,20 @@ export async function middleware(request: NextRequest) {
   const tokenCookie = request.cookies.get('token');
   const token = tokenCookie?.value;
 
-  // JWT 토큰 검증 (Edge Runtime용)
-  let userPayload = null;
+  // JWT 토큰 검증 (jose 사용 - Edge Runtime 호환)
+  let userPayload: any = null;
   if (token) {
-    userPayload = await verifyTokenEdge(token);
+    try {
+      const secret = new TextEncoder().encode(
+        process.env.NEXTAUTH_SECRET || 'amano-korea-collaboration-platform-secret-key-2024'
+      );
+      const { payload } = await jwtVerify(token, secret);
+      userPayload = payload;
+      console.log('[Middleware] JWT verified:', payload);
+    } catch (error) {
+      console.error('[Middleware] JWT verification failed:', error);
+      userPayload = null;
+    }
   }
 
   // 1. 인증이 필요한 경로 체크
