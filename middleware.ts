@@ -1,11 +1,9 @@
 // ============================================
-// Next.js Middleware - RBAC 및 인증 처리
+// Next.js Middleware - RBAC 및 인증 처리 (쿠키 세션)
 // ============================================
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { updateSession } from '@/lib/supabase/middleware';
-import { createClient as createServerClient } from '@/lib/supabase/server';
 
 // 인증이 필요한 경로
 const PROTECTED_ROUTES = [
@@ -29,9 +27,6 @@ const AUTH_ROUTES = ['/login'];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Supabase 세션 업데이트
-  const { supabaseResponse, user } = await updateSession(request);
-
   // 정적 파일 및 API 라우트는 제외
   if (
     pathname.startsWith('/_next') ||
@@ -39,15 +34,19 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/images') ||
     pathname.startsWith('/favicon')
   ) {
-    return supabaseResponse;
+    return NextResponse.next();
   }
+
+  // 쿠키에서 세션 정보 가져오기
+  const userSessionCookie = request.cookies.get('user_session');
+  const userSession = userSessionCookie ? JSON.parse(userSessionCookie.value) : null;
 
   // 1. 인증이 필요한 경로 체크
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
 
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !userSession) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
@@ -57,78 +56,48 @@ export async function middleware(request: NextRequest) {
   // 2. 로그인한 사용자는 로그인 페이지 접근 불가
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && userSession) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 
-  // 3. 역할 기반 권한 체크 (추가 DB 조회 필요)
-  if (user && isProtectedRoute) {
-    try {
-      const supabase = await createServerClient();
-      
-      // 사용자 정보 조회
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('role, team')
-        .eq('id', user.id)
-        .single() as any;
+  // 3. 역할 기반 권한 체크
+  if (userSession && isProtectedRoute) {
+    const userRole = userSession.role;
 
-      if (error || !userData) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
-      }
+    // 부서장 전용 경로 체크
+    const isAdminRoute = ADMIN_ONLY_ROUTES.some((route) =>
+      pathname.startsWith(route)
+    );
 
-      const userRole = userData.role as string;
-
-      // 부서장 전용 경로 체크
-      const isAdminRoute = ADMIN_ONLY_ROUTES.some((route) =>
-        pathname.startsWith(route)
-      );
-
-      if (isAdminRoute && userRole !== 'DEPARTMENT_HEAD') {
-        const url = request.nextUrl.clone();
-        url.pathname = '/dashboard';
-        url.searchParams.set('error', 'unauthorized');
-        return NextResponse.redirect(url);
-      }
-
-      // 팀장 이상 전용 경로 체크
-      const isTeamLeaderRoute = TEAM_LEADER_ROUTES.some((route) =>
-        pathname.startsWith(route)
-      );
-
-      if (
-        isTeamLeaderRoute &&
-        userRole !== 'DEPARTMENT_HEAD' &&
-        userRole !== 'TEAM_LEADER'
-      ) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/dashboard';
-        url.searchParams.set('error', 'unauthorized');
-        return NextResponse.redirect(url);
-      }
-    } catch (error) {
-      console.error('Middleware auth error:', error);
+    if (isAdminRoute && userRole !== 'DEPARTMENT_HEAD') {
       const url = request.nextUrl.clone();
-      url.pathname = '/login';
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+
+    // 팀장 이상 경로 체크
+    const isTeamLeaderRoute = TEAM_LEADER_ROUTES.some((route) =>
+      pathname.startsWith(route)
+    );
+
+    if (
+      isTeamLeaderRoute &&
+      userRole !== 'DEPARTMENT_HEAD' &&
+      userRole !== 'TEAM_LEADER'
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
       return NextResponse.redirect(url);
     }
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

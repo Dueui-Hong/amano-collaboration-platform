@@ -4,7 +4,7 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { verifyPassword } from '@/lib/auth/utils';
 import type { ApiResponse } from '@/types';
 
@@ -26,14 +26,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient() as any;
+    // Service Role Key를 사용하여 RLS 우회
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 사용자 조회
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('employee_id', employee_id)
       .single();
+
+    console.log('=== Login Debug ===');
+    console.log('Employee ID:', employee_id);
+    console.log('User found:', !!user);
+    console.log('User error:', userError);
+    if (user) {
+      console.log('User data:', { 
+        id: user.id, 
+        employee_id: user.employee_id, 
+        email: user.email,
+        has_password: !!user.password_hash 
+      });
+    }
 
     if (userError || !user) {
       return NextResponse.json<ApiResponse>(
@@ -42,6 +58,7 @@ export async function POST(request: NextRequest) {
           error: {
             message: '사원번호 또는 비밀번호가 일치하지 않습니다.',
             code: 'INVALID_CREDENTIALS',
+            details: userError,
           },
         },
         { status: 401 }
@@ -50,6 +67,8 @@ export async function POST(request: NextRequest) {
 
     // 비밀번호 검증
     const isValidPassword = await verifyPassword(password, user.password_hash);
+
+    console.log('Password verification:', isValidPassword);
 
     if (!isValidPassword) {
       return NextResponse.json<ApiResponse>(
@@ -64,52 +83,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Supabase Auth 세션 생성
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: user.employee_id, // Supabase Auth용 임시 비밀번호
-    });
-
-    // Supabase Auth 사용자가 없으면 생성
-    if (authError && authError.message.includes('Invalid login credentials')) {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: user.email,
-        password: user.employee_id,
-        options: {
-          data: {
-            employee_id: user.employee_id,
-            name: user.name,
-          },
-        },
-      });
-
-      if (signUpError) {
-        console.error('Sign up error:', signUpError);
-      }
-
-      // 다시 로그인 시도
-      const { data: retryAuthData, error: retryError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: user.employee_id,
-      });
-
-      if (retryError) {
-        return NextResponse.json<ApiResponse>(
-          {
-            success: false,
-            error: {
-              message: '인증 처리 중 오류가 발생했습니다.',
-              code: 'AUTH_ERROR',
-              details: retryError,
-            },
-          },
-          { status: 500 }
-        );
-      }
-    }
-
     // 마지막 로그인 시간 업데이트
-    await supabase
+    await supabaseAdmin
       .from('users')
       .update({
         last_login_at: new Date().toISOString(),
@@ -117,7 +92,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id);
 
     // 감사 로그 생성
-    await supabase.from('audit_logs').insert({
+    await supabaseAdmin.from('audit_logs').insert({
       user_id: user.id,
       action: 'LOGIN',
       ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
@@ -127,7 +102,8 @@ export async function POST(request: NextRequest) {
     // 민감 정보 제거
     const { password_hash, ...userWithoutPassword } = user;
 
-    return NextResponse.json<ApiResponse>(
+    // 세션 쿠키 설정 (간단한 JWT 대신)
+    const response = NextResponse.json<ApiResponse>(
       {
         success: true,
         data: {
@@ -137,6 +113,30 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    // 세션 쿠키에 사용자 ID 저장
+    response.cookies.set('user_id', user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7일
+      path: '/',
+    });
+
+    response.cookies.set('user_session', JSON.stringify({
+      id: user.id,
+      employee_id: user.employee_id,
+      role: user.role,
+      team: user.team,
+    }), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7일
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json<ApiResponse>(
