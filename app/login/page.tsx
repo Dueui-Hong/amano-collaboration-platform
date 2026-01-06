@@ -29,6 +29,7 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 쿠키를 포함하여 요청
         body: JSON.stringify(formData),
       });
 

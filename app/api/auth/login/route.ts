@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     // 세션 쿠키에 사용자 ID 저장
     response.cookies.set('user_id', user.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // HTTPS에서만 작동
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7일
       path: '/',
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       team: user.team,
     }), {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // HTTPS에서만 작동
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7일
       path: '/',
