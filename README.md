@@ -13,8 +13,8 @@
 - Frontend: Next.js 14 (App Router), TypeScript, Tailwind CSS
 - Backend: Next.js API Routes
 - Database: Supabase (PostgreSQL)
-- Authentication: Supabase Auth
-- Deployment: Vercel (권장)
+- Authentication: 쿠키 기반 세션 (bcrypt + HTTP-only cookies)
+- Deployment: Vercel
 
 ---
 
@@ -214,11 +214,13 @@ git push -u origin main
 
 ## 🔒 보안
 
-- Row Level Security (RLS) 적용
-- bcrypt를 이용한 비밀번호 해싱
-- JWT 기반 세션 관리
+- Row Level Security (RLS) 비활성화 (서비스 역할 키로 직접 접근 제어)
+- bcrypt를 이용한 비밀번호 해싱 (salt rounds: 10)
+- 쿠키 기반 세션 관리 (HTTP-only cookies)
+  - `user_id`: HTTP-only, 7일 만료
+  - `user_session`: 클라이언트 접근 가능, 7일 만료
 - Middleware를 통한 경로별 권한 체크
-- 감사 로그 기록
+- 감사 로그 기록 (LOGIN, LOGOUT, 주요 액션)
 
 ---
 
@@ -259,6 +261,12 @@ const data = await response.json();
 
 ## ✅ 구현 완료 기능 (Phase 1)
 
+### 인증 및 세션 관리
+- ✅ 사원번호 + 비밀번호 기반 로그인
+- ✅ 쿠키 기반 세션 (HTTP-only, 7일 만료)
+- ✅ 로그아웃 (쿠키 삭제)
+- ✅ 현재 사용자 정보 조회 (`/api/auth/me`)
+
 ### 주간 보고서 시스템
 - ✅ 보고서 생성/조회/수정/삭제 API
 - ✅ 보고서 제출 API (DRAFT → SUBMITTED)
@@ -281,6 +289,11 @@ const data = await response.json();
 - ✅ 파일 크기 제한 (10MB)
 - ✅ 파일 형식 검증
 - ✅ 공개 URL 자동 생성
+
+### 프론트엔드
+- ✅ 로그인 페이지 (사원번호 + 비밀번호)
+- ✅ 대시보드 페이지 (사용자 정보 카드, 통계, 최근 활동)
+- ✅ 미들웨어 기반 RBAC 경로 보호
 
 ### API 통계
 - **총 13개 API Route** 완전 구현
