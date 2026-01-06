@@ -41,12 +41,9 @@ export default function LoginPage() {
         return;
       }
 
-      // 최초 로그인 시 비밀번호 변경 페이지로 이동
-      if (data.data.isFirstLogin) {
-        router.push('/auth/change-password?first=true');
-      } else {
-        router.push('/dashboard');
-      }
+      // 로그인 성공 시 대시보드로 이동
+      // TODO: 최초 로그인 시 비밀번호 변경 기능 추가 필요
+      router.push('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       setError('서버와의 통신에 실패했습니다.');
