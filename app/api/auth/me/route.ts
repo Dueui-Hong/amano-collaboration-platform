@@ -1,20 +1,21 @@
 // ============================================
-// Get Current User API Route (쿠키 세션 방식)
+// Get Current User API Route (JWT 기반)
 // GET /api/auth/me
 // ============================================
 
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { verifyToken } from '@/lib/auth/jwt';
 import type { ApiResponse } from '@/types';
 
 export async function GET() {
   try {
-    // 쿠키에서 사용자 ID 가져오기
+    // 쿠키에서 JWT 토큰 가져오기
     const cookieStore = await cookies();
-    const userIdCookie = cookieStore.get('user_id');
+    const tokenCookie = cookieStore.get('token');
 
-    if (!userIdCookie) {
+    if (!tokenCookie) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
@@ -27,14 +28,29 @@ export async function GET() {
       );
     }
 
-    const userId = userIdCookie.value;
+    // JWT 토큰 검증
+    const payload = await verifyToken(tokenCookie.value);
+
+    if (!payload) {
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: {
+            message: '유효하지 않은 토큰입니다.',
+            code: 'INVALID_TOKEN',
+          },
+        },
+        { status: 401 }
+      );
+    }
+
     const supabase = await createClient() as any;
 
-    // DB에서 사용자 정보 조회 (서비스 역할 키 사용)
+    // DB에서 사용자 정보 조회
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userId)
+      .eq('id', payload.userId)
       .single();
 
     if (error || !user) {

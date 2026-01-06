@@ -1,18 +1,20 @@
 // ============================================
-// Login API Route
+// Login API Route (JWT + HTTP-only Cookie)
 // POST /api/auth/login
 // ============================================
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { verifyPassword } from '@/lib/auth/utils';
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { createToken } from '@/lib/auth/jwt';
+import { compare } from 'bcryptjs';
 import type { ApiResponse } from '@/types';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { employee_id, password } = body;
 
+    // 입력 검증
     if (!employee_id || !password) {
       return NextResponse.json<ApiResponse>(
         {
@@ -26,39 +28,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Service Role Key를 사용하여 RLS 우회
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = await createClient() as any;
 
-    // 사용자 조회
-    const { data: user, error: userError } = await supabaseAdmin
+    // 사용자 조회 (서비스 역할 키 사용)
+    const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('employee_id', employee_id)
       .single();
 
-    console.log('=== Login Debug ===');
-    console.log('Employee ID:', employee_id);
-    console.log('User found:', !!user);
-    console.log('User error:', userError);
-    if (user) {
-      console.log('User data:', { 
-        id: user.id, 
-        employee_id: user.employee_id, 
-        email: user.email,
-        has_password: !!user.password_hash 
-      });
-    }
-
-    if (userError || !user) {
+    if (error || !user) {
+      console.error('User not found:', employee_id);
       return NextResponse.json<ApiResponse>(
         {
           success: false,
           error: {
             message: '사원번호 또는 비밀번호가 일치하지 않습니다.',
             code: 'INVALID_CREDENTIALS',
-            details: userError,
           },
         },
         { status: 401 }
@@ -66,11 +52,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 비밀번호 검증
-    const isValidPassword = await verifyPassword(password, user.password_hash);
-
-    console.log('Password verification:', isValidPassword);
+    const isValidPassword = await compare(password, user.password_hash);
 
     if (!isValidPassword) {
+      console.error('Invalid password for:', employee_id);
       return NextResponse.json<ApiResponse>(
         {
           success: false,
@@ -83,16 +68,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // JWT 토큰 생성
+    const token = await createToken({
+      userId: user.id,
+      employeeId: user.employee_id,
+      role: user.role,
+      team: user.team,
+    });
+
     // 마지막 로그인 시간 업데이트
-    await supabaseAdmin
+    await supabase
       .from('users')
-      .update({
-        last_login_at: new Date().toISOString(),
-      })
+      .update({ last_login_at: new Date().toISOString() })
       .eq('id', user.id);
 
-    // 감사 로그 생성
-    await supabaseAdmin.from('audit_logs').insert({
+    // 감사 로그 기록
+    await supabase.from('audit_logs').insert({
       user_id: user.id,
       action: 'LOGIN',
       ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
@@ -102,7 +93,7 @@ export async function POST(request: NextRequest) {
     // 민감 정보 제거
     const { password_hash, ...userWithoutPassword } = user;
 
-    // 세션 쿠키 설정 (간단한 JWT 대신)
+    // JWT 토큰을 HTTP-only 쿠키로 설정
     const response = NextResponse.json<ApiResponse>(
       {
         success: true,
@@ -114,27 +105,33 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
-    // 세션 쿠키에 사용자 ID 저장
-    response.cookies.set('user_id', user.id, {
-      httpOnly: true, // XSS 방지: JavaScript로 접근 불가
-      secure: true, // HTTPS에서만 전송
-      sameSite: 'strict', // CSRF 방지: 같은 사이트에서만 쿠키 전송
-      maxAge: 60 * 60 * 24 * 7, // 7일
+    // HTTP-only 쿠키 설정 (7일 만료)
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7일
     });
 
-    response.cookies.set('user_session', JSON.stringify({
-      id: user.id,
-      employee_id: user.employee_id,
-      role: user.role,
-      team: user.team,
-    }), {
-      httpOnly: true, // XSS 방지: JavaScript로 접근 불가
-      secure: true, // HTTPS에서만 전송
-      sameSite: 'strict', // CSRF 방지: 같은 사이트에서만 쿠키 전송
-      maxAge: 60 * 60 * 24 * 7, // 7일
-      path: '/',
-    });
+    // 사용자 정보 쿠키 (클라이언트 접근 가능)
+    response.cookies.set(
+      'user_session',
+      JSON.stringify({
+        id: user.id,
+        employee_id: user.employee_id,
+        name: user.name,
+        role: user.role,
+        team: user.team,
+      }),
+      {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 7일
+      }
+    );
 
     return response;
   } catch (error) {
