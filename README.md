@@ -19,14 +19,32 @@
 - **Calendar**: FullCalendar
 - **Drag & Drop**: @hello-pangea/dnd
 
-## 🚀 시작하기
+## 🌐 현재 실행 중인 시스템
+
+**✅ 시스템 상태**: 정상 운영 중
+
+### 접속 URL
+- **메인 페이지**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai
+- **공개 요청 폼**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/request
+- **로그인**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/login
+- **관리자 대시보드**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/admin/dashboard
+- **팀원 캘린더**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/dashboard
+
+### Supabase 프로젝트
+- **Project URL**: https://wsredeftfoelzgkdalhx.supabase.co
+
+### 테스트 계정
+- 관리자: `admin@amano.kr` / `password123`
+- 팀원: `designer@amano.kr` / `password123`
+
+## 🚀 로컬 개발 시작하기
 
 ### 1. 환경변수 설정
 
 `.env.local` 파일 생성:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_URL=https://wsredeftfoelzgkdalhx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 NEXTAUTH_SECRET=amano-ppt-automation-secret-key-2026
@@ -35,7 +53,20 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ### 2. Supabase 데이터베이스 설정
 
-`supabase/migrations/001_initial_schema.sql` 파일을 Supabase SQL Editor에서 실행
+1. Supabase SQL Editor 접속: https://supabase.com/dashboard/project/wsredeftfoelzgkdalhx/sql/new
+2. `supabase/migrations/001_initial_schema.sql` 파일 내용 복사
+3. SQL Editor에 붙여넣기 후 실행
+
+**또는** 테스트 계정 수동 생성:
+1. Supabase → Authentication → Users
+2. "Add user" 클릭
+3. Email: `admin@amano.kr`, Password: `password123`
+4. "Auto Confirm User" 체크
+5. SQL Editor에서 프로필 생성:
+```sql
+INSERT INTO public.profiles (id, name, role, position, email)
+VALUES ('사용자UUID', '김팀장', 'admin', '팀장', 'admin@amano.kr');
+```
 
 ### 3. 패키지 설치 및 실행
 
