@@ -162,7 +162,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box 
+      sx={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f0f7 50%, #d5e5f2 100%)',
+      }}
+    >
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
       
       <Container maxWidth="md" sx={{ py: 4 }}>

@@ -101,7 +101,9 @@ export default function RequestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8" style={{
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f0f7 50%, #d5e5f2 100%)'
+    }}>
       <div className="max-w-2xl mx-auto">
         {/* 헤더 */}
         <div className="text-center mb-8">
