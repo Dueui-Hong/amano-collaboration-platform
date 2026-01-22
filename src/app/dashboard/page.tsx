@@ -94,10 +94,9 @@ export default function DashboardPage() {
   };
 
   const handleEventClick = (info: any) => {
-    const task = tasks.find((t) => t.id === info.event.id);
-    if (task) {
-      setSelectedTask(task);
-      setShowModal(true);
+    const taskId = info.event.id;
+    if (taskId) {
+      router.push(`/tasks/${taskId}`);
     }
   };
 
@@ -359,10 +358,7 @@ export default function DashboardPage() {
                       key={task.id}
                       variant="outlined"
                       sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setShowModal(true);
-                      }}
+                      onClick={() => router.push(`/tasks/${task.id}`)}
                     >
                       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -402,10 +398,7 @@ export default function DashboardPage() {
                       key={task.id}
                       variant="outlined"
                       sx={{ cursor: 'pointer', bgcolor: 'warning.50', '&:hover': { bgcolor: 'warning.100' } }}
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setShowModal(true);
-                      }}
+                      onClick={() => router.push(`/tasks/${task.id}`)}
                     >
                       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -445,10 +438,7 @@ export default function DashboardPage() {
                       key={task.id}
                       variant="outlined"
                       sx={{ cursor: 'pointer', bgcolor: 'success.50', '&:hover': { bgcolor: 'success.100' } }}
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setShowModal(true);
-                      }}
+                      onClick={() => router.push(`/tasks/${task.id}`)}
                     >
                       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>

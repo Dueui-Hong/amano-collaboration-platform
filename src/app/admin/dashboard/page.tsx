@@ -217,6 +217,10 @@ export default function AdminDashboardPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const handleTaskClick = (taskId: string) => {
+    router.push(`/tasks/${taskId}`);
+  };
+
   // 통계 계산
   const getStatistics = (): Statistics => {
     const today = new Date();
@@ -518,7 +522,17 @@ export default function AdminDashboardPage() {
                             </Typography>
                             <Box sx={{ mt: 0.5 }}>
                               {memberStats.todayTasks.map(task => (
-                                <Typography key={task.id} variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
+                                <Typography 
+                                  key={task.id} 
+                                  variant="caption" 
+                                  display="block" 
+                                  sx={{ 
+                                    fontSize: '0.7rem',
+                                    cursor: 'pointer',
+                                    '&:hover': { textDecoration: 'underline' }
+                                  }}
+                                  onClick={() => handleTaskClick(task.id)}
+                                >
                                   • {task.title}
                                 </Typography>
                               ))}
@@ -534,7 +548,17 @@ export default function AdminDashboardPage() {
                             </Typography>
                             <Box sx={{ mt: 0.5 }}>
                               {memberStats.urgentTasks.map(task => (
-                                <Typography key={task.id} variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
+                                <Typography 
+                                  key={task.id} 
+                                  variant="caption" 
+                                  display="block" 
+                                  sx={{ 
+                                    fontSize: '0.7rem',
+                                    cursor: 'pointer',
+                                    '&:hover': { textDecoration: 'underline' }
+                                  }}
+                                  onClick={() => handleTaskClick(task.id)}
+                                >
                                   • {task.title}
                                 </Typography>
                               ))}
@@ -558,7 +582,16 @@ export default function AdminDashboardPage() {
                   <CardContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                       {unassignedTasks.map(task => (
-                        <Paper key={task.id} variant="outlined" sx={{ p: 2 }}>
+                        <Paper 
+                          key={task.id} 
+                          variant="outlined" 
+                          sx={{ 
+                            p: 2,
+                            cursor: 'pointer',
+                            '&:hover': { bgcolor: 'action.hover' }
+                          }}
+                          onClick={() => handleTaskClick(task.id)}
+                        >
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box sx={{ flex: 1 }}>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
@@ -627,6 +660,10 @@ export default function AdminDashboardPage() {
                                     mb: 1,
                                     cursor: 'grab',
                                     '&:active': { cursor: 'grabbing' },
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTaskClick(task.id);
                                   }}
                                 >
                                   <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem' }}>
@@ -710,6 +747,10 @@ export default function AdminDashboardPage() {
                                           task.status === 'Done' ? 'success.50' :
                                           task.status === 'Doing' ? 'info.50' : 'transparent',
                                         '&:active': { cursor: 'grabbing' },
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleTaskClick(task.id);
                                       }}
                                     >
                                       <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem' }}>
