@@ -30,11 +30,14 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Divider from '@mui/material/Divider';
 import Badge from '@mui/material/Badge';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DescriptionIcon from '@mui/icons-material/Description';
+import AddIcon from '@mui/icons-material/Add';
 import Header from '@/components/Header';
 
 export default function DashboardPage() {
@@ -51,6 +54,18 @@ export default function DashboardPage() {
     message: '',
     severity: 'success',
   });
+
+  // 새 업무 등록 모달 상태
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    category: '',
+    requester_dept: '',
+    requester_name: '',
+    description: '',
+    due_date: '',
+  });
+  const [creatingTask, setCreatingTask] = useState(false);
 
   useEffect(() => {
     fetchUserAndTasks();
@@ -211,6 +226,56 @@ export default function DashboardPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // 새 업무 생성
+  const createNewTask = async () => {
+    if (!userInfo) return;
+
+    // 필수 입력 검증
+    if (!newTask.title || !newTask.category || !newTask.due_date) {
+      showSnackbar('제목, 카테고리, 마감일은 필수 입력입니다.', 'error');
+      return;
+    }
+
+    setCreatingTask(true);
+
+    try {
+      const { error } = await supabase.from('tasks').insert({
+        title: newTask.title,
+        category: newTask.category,
+        requester_dept: newTask.requester_dept || userInfo.department || '기획홍보팀',
+        requester_name: newTask.requester_name || userInfo.name,
+        description: newTask.description,
+        due_date: newTask.due_date,
+        status: 'Todo',
+        assignee_id: userInfo.id, // 본인에게 자동 배정
+        image_urls: [],
+      });
+
+      if (error) throw error;
+
+      showSnackbar('새 업무가 등록되었습니다!', 'success');
+      setShowNewTaskModal(false);
+      setNewTask({
+        title: '',
+        category: '',
+        requester_dept: '',
+        requester_name: '',
+        description: '',
+        due_date: '',
+      });
+      fetchUserAndTasks();
+    } catch (error) {
+      console.error('업무 생성 실패:', error);
+      showSnackbar('업무 생성에 실패했습니다.', 'error');
+    } finally {
+      setCreatingTask(false);
+    }
+  };
+
+  const handleNewTaskChange = (field: string, value: string) => {
+    setNewTask({ ...newTask, [field]: value });
+  };
+
   // FullCalendar 이벤트 데이터 변환
   const calendarEvents = tasks.map((task) => ({
     id: task.id,
@@ -266,13 +331,35 @@ export default function DashboardPage() {
       
       <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* 헤더 */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-            내 업무 캘린더
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            캘린더에서 업무를 클릭하여 상태를 변경하세요
-          </Typography>
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+              내 업무 캘린더
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              캘린더에서 업무를 클릭하여 상태를 변경하세요
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setShowNewTaskModal(true)}
+            sx={{
+              background: 'linear-gradient(135deg, #0081C0 0%, #005A8D 100%)',
+              color: 'white',
+              fontWeight: 600,
+              px: 3,
+              py: 1.5,
+              borderRadius: 2,
+              boxShadow: '0 4px 12px rgba(0, 129, 192, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #005A8D 0%, #004A70 100%)',
+                boxShadow: '0 6px 16px rgba(0, 129, 192, 0.4)',
+              }
+            }}
+          >
+            새 업무 등록
+          </Button>
         </Box>
 
         {/* 통계 카드 */}
@@ -481,6 +568,116 @@ export default function DashboardPage() {
       >
         {generatingPPT ? <CircularProgress size={24} color="inherit" /> : <DescriptionIcon />}
       </Fab>
+
+      {/* 새 업무 등록 모달 */}
+      <Dialog open={showNewTaskModal} onClose={() => setShowNewTaskModal(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            새 업무 등록
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            본인에게 배정되는 업무를 등록합니다
+          </Typography>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
+            <TextField
+              label="업무 제목"
+              required
+              fullWidth
+              value={newTask.title}
+              onChange={(e) => handleNewTaskChange('title', e.target.value)}
+              placeholder="예: 홈페이지 배너 디자인"
+            />
+            
+            <TextField
+              label="카테고리"
+              required
+              select
+              fullWidth
+              value={newTask.category}
+              onChange={(e) => handleNewTaskChange('category', e.target.value)}
+            >
+              <MenuItem value="디자인">디자인</MenuItem>
+              <MenuItem value="기획">기획</MenuItem>
+              <MenuItem value="홍보">홍보</MenuItem>
+              <MenuItem value="콘텐츠">콘텐츠</MenuItem>
+              <MenuItem value="영상">영상</MenuItem>
+              <MenuItem value="행사">행사</MenuItem>
+              <MenuItem value="기타">기타</MenuItem>
+            </TextField>
+
+            <TextField
+              label="요청 부서"
+              fullWidth
+              value={newTask.requester_dept}
+              onChange={(e) => handleNewTaskChange('requester_dept', e.target.value)}
+              placeholder={`기본값: ${userInfo?.department || '기획홍보팀'}`}
+              helperText="비워두면 본인 부서가 자동으로 입력됩니다"
+            />
+
+            <TextField
+              label="담당자 이름"
+              fullWidth
+              value={newTask.requester_name}
+              onChange={(e) => handleNewTaskChange('requester_name', e.target.value)}
+              placeholder={`기본값: ${userInfo?.name}`}
+              helperText="비워두면 본인 이름이 자동으로 입력됩니다"
+            />
+
+            <TextField
+              label="마감일"
+              required
+              type="date"
+              fullWidth
+              value={newTask.due_date}
+              onChange={(e) => handleNewTaskChange('due_date', e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <TextField
+              label="업무 상세 내용"
+              multiline
+              rows={4}
+              fullWidth
+              value={newTask.description}
+              onChange={(e) => handleNewTaskChange('description', e.target.value)}
+              placeholder="업무에 대한 자세한 설명을 입력하세요"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button 
+            onClick={() => {
+              setShowNewTaskModal(false);
+              setNewTask({
+                title: '',
+                category: '',
+                requester_dept: '',
+                requester_name: '',
+                description: '',
+                due_date: '',
+              });
+            }}
+            disabled={creatingTask}
+          >
+            취소
+          </Button>
+          <Button
+            variant="contained"
+            onClick={createNewTask}
+            disabled={creatingTask}
+            sx={{
+              background: 'linear-gradient(135deg, #0081C0 0%, #005A8D 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #005A8D 0%, #004A70 100%)',
+              }
+            }}
+          >
+            {creatingTask ? <CircularProgress size={24} color="inherit" /> : '등록'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* 업무 상세 모달 */}
       <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth>

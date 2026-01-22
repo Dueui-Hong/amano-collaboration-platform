@@ -47,6 +47,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import ImageIcon from '@mui/icons-material/Image';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function TaskDetailPage() {
   const router = useRouter();
@@ -64,6 +65,8 @@ export default function TaskDetailPage() {
     message: '',
     severity: 'success',
   });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (taskId) {
@@ -200,6 +203,40 @@ export default function TaskDetailPage() {
     }
   };
 
+  const deleteTask = async () => {
+    if (!task || !userInfo) return;
+
+    // 권한 확인: 관리자만 삭제 가능
+    if (userInfo.role !== 'admin') {
+      showSnackbar('관리자만 업무를 삭제할 수 있습니다.', 'error');
+      return;
+    }
+
+    setDeleting(true);
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', task.id);
+
+      if (error) throw error;
+
+      showSnackbar('업무가 삭제되었습니다.', 'success');
+      
+      // 관리자는 관리자 대시보드로, 팀원은 개인 대시보드로
+      setTimeout(() => {
+        router.push(userInfo.role === 'admin' ? '/admin/dashboard' : '/dashboard');
+      }, 1000);
+    } catch (error) {
+      console.error('업무 삭제 실패:', error);
+      showSnackbar('업무 삭제에 실패했습니다.', 'error');
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmOpen(false);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       uploadResultImage(e.target.files[0]);
@@ -292,14 +329,27 @@ export default function TaskDetailPage() {
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
       
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* 뒤로가기 버튼 */}
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBack}
-          sx={{ mb: 3 }}
-        >
-          돌아가기
-        </Button>
+        {/* 상단 버튼 */}
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBack}
+          >
+            돌아가기
+          </Button>
+          
+          {/* 관리자만 삭제 버튼 표시 */}
+          {userInfo.role === 'admin' && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => setDeleteConfirmOpen(true)}
+            >
+              업무 삭제
+            </Button>
+          )}
+        </Box>
 
         {/* 업무 제목 & 상태 */}
         <Box sx={{ mb: 3 }}>
@@ -548,6 +598,42 @@ export default function TaskDetailPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSelectedImage(null)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 삭제 확인 Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => !deleting && setDeleteConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent>
+          <Box sx={{ textAlign: 'center', py: 2 }}>
+            <DeleteIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              업무를 삭제하시겠습니까?
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              삭제된 업무는 복구할 수 없습니다.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={() => setDeleteConfirmOpen(false)}
+            disabled={deleting}
+          >
+            취소
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={deleteTask}
+            disabled={deleting}
+          >
+            {deleting ? <CircularProgress size={24} color="inherit" /> : '삭제'}
+          </Button>
         </DialogActions>
       </Dialog>
 
