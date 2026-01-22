@@ -125,12 +125,14 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* 테스트 계정 안내 */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600 font-semibold mb-2">테스트 계정:</p>
-            <ul className="text-xs text-gray-500 space-y-1">
-              <li>• 관리자: admin@amano.kr / password123</li>
-              <li>• 팀원: designer@amano.kr / password123</li>
+          {/* 팀 계정 안내 */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-900 font-semibold mb-2">기획홍보팀 계정:</p>
+            <ul className="text-xs text-blue-700 space-y-1">
+              <li>• 팀장: minseok_kim1@amano.co.kr / 1111</li>
+              <li>• 계장: seyoung_hong@amano.co.kr / 1111</li>
+              <li>• 사원: yeji_choi@amano.co.kr / 1111</li>
+              <li>• 사원: dueui_hong@amano.co.kr / 1111</li>
             </ul>
           </div>
         </div>

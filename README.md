@@ -33,9 +33,14 @@
 ### Supabase 프로젝트
 - **Project URL**: https://wsredeftfoelzgkdalhx.supabase.co
 
-### 테스트 계정
-- 관리자: `admin@amano.kr` / `password123`
-- 팀원: `designer@amano.kr` / `password123`
+### 팀 계정 정보
+**팀장 (관리자)**
+- 김민석: `minseok_kim1@amano.co.kr` / `1111`
+
+**팀원**
+- 홍세영 (계장): `seyoung_hong@amano.co.kr` / `1111`
+- 최예지 (사원): `yeji_choi@amano.co.kr` / `1111`
+- 홍두의 (사원): `dueui_hong@amano.co.kr` / `1111`
 
 ## 🚀 로컬 개발 시작하기
 

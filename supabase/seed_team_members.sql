@@ -1,8 +1,15 @@
 -- ============================================
--- 아마노코리아 기획홍보팀 팀원 데이터
+-- 아마노코리아 기획홍보팀 실제 팀원 데이터
 -- ============================================
 
--- 1. 관리자 계정 (팀장)
+-- 기존 테스트 데이터 완전 삭제
+DELETE FROM public.tasks;
+DELETE FROM public.profiles;
+DELETE FROM auth.users WHERE email LIKE '%@amano.kr' OR email LIKE '%@amano.co.kr';
+
+-- ============================================
+-- 1. 팀장: 김민석
+-- ============================================
 INSERT INTO auth.users (
   id,
   instance_id,
@@ -19,10 +26,10 @@ INSERT INTO auth.users (
   confirmation_token
 )
 VALUES (
-  '00000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000001',
   '00000000-0000-0000-0000-000000000000',
-  'admin@amano.kr',
-  crypt('password123', gen_salt('bf')),
+  'minseok_kim1@amano.co.kr',
+  crypt('1111', gen_salt('bf')),
   NOW(),
   NOW(),
   NOW(),
@@ -32,228 +39,148 @@ VALUES (
   '{}',
   FALSE,
   ''
-)
-ON CONFLICT (id) DO UPDATE SET
-  email = 'admin@amano.kr',
-  encrypted_password = crypt('password123', gen_salt('bf')),
-  email_confirmed_at = NOW();
+);
 
 INSERT INTO public.profiles (id, name, role, position, email)
 VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  '김팀장',
+  '10000000-0000-0000-0000-000000000001',
+  '김민석',
   'admin',
-  '팀장',
-  'admin@amano.kr'
-)
-ON CONFLICT (id) DO UPDATE SET
-  name = '김팀장',
-  role = 'admin',
-  position = '팀장',
-  email = 'admin@amano.kr';
-
--- 2. 디자이너 (팀원)
-INSERT INTO auth.users (
-  id,
-  instance_id,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  created_at,
-  updated_at,
-  aud,
-  role,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  is_super_admin,
-  confirmation_token
-)
-VALUES (
-  '00000000-0000-0000-0000-000000000002',
-  '00000000-0000-0000-0000-000000000000',
-  'designer@amano.kr',
-  crypt('password123', gen_salt('bf')),
-  NOW(),
-  NOW(),
-  NOW(),
-  'authenticated',
-  'authenticated',
-  '{"provider":"email","providers":["email"]}',
-  '{}',
-  FALSE,
-  ''
-)
-ON CONFLICT (id) DO UPDATE SET
-  email = 'designer@amano.kr',
-  encrypted_password = crypt('password123', gen_salt('bf')),
-  email_confirmed_at = NOW();
-
-INSERT INTO public.profiles (id, name, role, position, email)
-VALUES (
-  '00000000-0000-0000-0000-000000000002',
-  '박디자이너',
-  'member',
-  '디자이너',
-  'designer@amano.kr'
-)
-ON CONFLICT (id) DO UPDATE SET
-  name = '박디자이너',
-  role = 'member',
-  position = '디자이너',
-  email = 'designer@amano.kr';
-
--- 3. 영상 담당 (팀원)
-INSERT INTO auth.users (
-  id,
-  instance_id,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  created_at,
-  updated_at,
-  aud,
-  role,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  is_super_admin,
-  confirmation_token
-)
-VALUES (
-  '00000000-0000-0000-0000-000000000003',
-  '00000000-0000-0000-0000-000000000000',
-  'video@amano.kr',
-  crypt('password123', gen_salt('bf')),
-  NOW(),
-  NOW(),
-  NOW(),
-  'authenticated',
-  'authenticated',
-  '{"provider":"email","providers":["email"]}',
-  '{}',
-  FALSE,
-  ''
-)
-ON CONFLICT (id) DO UPDATE SET
-  email = 'video@amano.kr',
-  encrypted_password = crypt('password123', gen_salt('bf')),
-  email_confirmed_at = NOW();
-
-INSERT INTO public.profiles (id, name, role, position, email)
-VALUES (
-  '00000000-0000-0000-0000-000000000003',
-  '이영상',
-  'member',
-  '영상',
-  'video@amano.kr'
-)
-ON CONFLICT (id) DO UPDATE SET
-  name = '이영상',
-  role = 'member',
-  position = '영상',
-  email = 'video@amano.kr';
-
--- 4. 3D MAX 담당 (팀원)
-INSERT INTO auth.users (
-  id,
-  instance_id,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  created_at,
-  updated_at,
-  aud,
-  role,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  is_super_admin,
-  confirmation_token
-)
-VALUES (
-  '00000000-0000-0000-0000-000000000004',
-  '00000000-0000-0000-0000-000000000000',
-  '3d@amano.kr',
-  crypt('password123', gen_salt('bf')),
-  NOW(),
-  NOW(),
-  NOW(),
-  'authenticated',
-  'authenticated',
-  '{"provider":"email","providers":["email"]}',
-  '{}',
-  FALSE,
-  ''
-)
-ON CONFLICT (id) DO UPDATE SET
-  email = '3d@amano.kr',
-  encrypted_password = crypt('password123', gen_salt('bf')),
-  email_confirmed_at = NOW();
-
-INSERT INTO public.profiles (id, name, role, position, email)
-VALUES (
-  '00000000-0000-0000-0000-000000000004',
-  '최3D',
-  'member',
-  '3D MAX',
-  '3d@amano.kr'
-)
-ON CONFLICT (id) DO UPDATE SET
-  name = '최3D',
-  role = 'member',
-  position = '3D MAX',
-  email = '3d@amano.kr';
-
--- 5. 기획 담당 (팀원)
-INSERT INTO auth.users (
-  id,
-  instance_id,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  created_at,
-  updated_at,
-  aud,
-  role,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  is_super_admin,
-  confirmation_token
-)
-VALUES (
-  '00000000-0000-0000-0000-000000000005',
-  '00000000-0000-0000-0000-000000000000',
-  'plan@amano.kr',
-  crypt('password123', gen_salt('bf')),
-  NOW(),
-  NOW(),
-  NOW(),
-  'authenticated',
-  'authenticated',
-  '{"provider":"email","providers":["email"]}',
-  '{}',
-  FALSE,
-  ''
-)
-ON CONFLICT (id) DO UPDATE SET
-  email = 'plan@amano.kr',
-  encrypted_password = crypt('password123', gen_salt('bf')),
-  email_confirmed_at = NOW();
-
-INSERT INTO public.profiles (id, name, role, position, email)
-VALUES (
-  '00000000-0000-0000-0000-000000000005',
-  '정기획',
-  'member',
-  '기획',
-  'plan@amano.kr'
-)
-ON CONFLICT (id) DO UPDATE SET
-  name = '정기획',
-  role = 'member',
-  position = '기획',
-  email = 'plan@amano.kr';
+  '기획홍보팀 팀장',
+  'minseok_kim1@amano.co.kr'
+);
 
 -- ============================================
--- 샘플 업무 데이터
+-- 2. 팀원: 홍세영 (계장)
+-- ============================================
+INSERT INTO auth.users (
+  id,
+  instance_id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  aud,
+  role,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  confirmation_token
+)
+VALUES (
+  '10000000-0000-0000-0000-000000000002',
+  '00000000-0000-0000-0000-000000000000',
+  'seyoung_hong@amano.co.kr',
+  crypt('1111', gen_salt('bf')),
+  NOW(),
+  NOW(),
+  NOW(),
+  'authenticated',
+  'authenticated',
+  '{"provider":"email","providers":["email"]}',
+  '{}',
+  FALSE,
+  ''
+);
+
+INSERT INTO public.profiles (id, name, role, position, email)
+VALUES (
+  '10000000-0000-0000-0000-000000000002',
+  '홍세영',
+  'member',
+  '계장',
+  'seyoung_hong@amano.co.kr'
+);
+
+-- ============================================
+-- 3. 팀원: 최예지 (사원)
+-- ============================================
+INSERT INTO auth.users (
+  id,
+  instance_id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  aud,
+  role,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  confirmation_token
+)
+VALUES (
+  '10000000-0000-0000-0000-000000000003',
+  '00000000-0000-0000-0000-000000000000',
+  'yeji_choi@amano.co.kr',
+  crypt('1111', gen_salt('bf')),
+  NOW(),
+  NOW(),
+  NOW(),
+  'authenticated',
+  'authenticated',
+  '{"provider":"email","providers":["email"]}',
+  '{}',
+  FALSE,
+  ''
+);
+
+INSERT INTO public.profiles (id, name, role, position, email)
+VALUES (
+  '10000000-0000-0000-0000-000000000003',
+  '최예지',
+  'member',
+  '사원',
+  'yeji_choi@amano.co.kr'
+);
+
+-- ============================================
+-- 4. 팀원: 홍두의 (사원)
+-- ============================================
+INSERT INTO auth.users (
+  id,
+  instance_id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  aud,
+  role,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  confirmation_token
+)
+VALUES (
+  '10000000-0000-0000-0000-000000000004',
+  '00000000-0000-0000-0000-000000000000',
+  'dueui_hong@amano.co.kr',
+  crypt('1111', gen_salt('bf')),
+  NOW(),
+  NOW(),
+  NOW(),
+  'authenticated',
+  'authenticated',
+  '{"provider":"email","providers":["email"]}',
+  '{}',
+  FALSE,
+  ''
+);
+
+INSERT INTO public.profiles (id, name, role, position, email)
+VALUES (
+  '10000000-0000-0000-0000-000000000004',
+  '홍두의',
+  'member',
+  '사원',
+  'dueui_hong@amano.co.kr'
+);
+
+-- ============================================
+-- 샘플 업무 데이터 (테스트용)
 -- ============================================
 
 -- 미배정 업무 1
@@ -276,8 +203,7 @@ VALUES (
   'Unassigned',
   CURRENT_DATE + INTERVAL '7 days',
   NOW()
-)
-ON CONFLICT DO NOTHING;
+);
 
 -- 미배정 업무 2
 INSERT INTO public.tasks (
@@ -299,8 +225,7 @@ VALUES (
   'Unassigned',
   CURRENT_DATE + INTERVAL '10 days',
   NOW()
-)
-ON CONFLICT DO NOTHING;
+);
 
 -- 미배정 업무 3
 INSERT INTO public.tasks (
@@ -322,8 +247,7 @@ VALUES (
   'Unassigned',
   CURRENT_DATE + INTERVAL '14 days',
   NOW()
-)
-ON CONFLICT DO NOTHING;
+);
 
 -- 미배정 업무 4
 INSERT INTO public.tasks (
@@ -345,8 +269,7 @@ VALUES (
   'Unassigned',
   CURRENT_DATE + INTERVAL '5 days',
   NOW()
-)
-ON CONFLICT DO NOTHING;
+);
 
 -- 미배정 업무 5
 INSERT INTO public.tasks (
@@ -368,10 +291,11 @@ VALUES (
   'Unassigned',
   CURRENT_DATE + INTERVAL '3 days',
   NOW()
-)
-ON CONFLICT DO NOTHING;
+);
 
+-- ============================================
 -- 확인 쿼리
+-- ============================================
 SELECT 
   u.email,
   u.email_confirmed_at,
@@ -380,5 +304,11 @@ SELECT
   p.position
 FROM auth.users u
 LEFT JOIN public.profiles p ON u.id = p.id
-WHERE u.email LIKE '%@amano.kr'
-ORDER BY p.role DESC, p.name;
+WHERE u.email LIKE '%@amano.co.kr'
+ORDER BY 
+  CASE p.role 
+    WHEN 'admin' THEN 1 
+    WHEN 'member' THEN 2 
+    ELSE 3 
+  END,
+  p.name;
