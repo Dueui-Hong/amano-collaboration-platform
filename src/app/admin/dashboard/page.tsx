@@ -8,16 +8,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { supabase, Task, Profile } from '@/lib/supabase';
+import Header from '@/components/Header';
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const [unassignedTasks, setUnassignedTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<Profile[]>([]);
   const [memberTasks, setMemberTasks] = useState<{ [key: string]: Task[] }>({});
   const [loading, setLoading] = useState(true);
   const [generatingPPT, setGeneratingPPT] = useState(false);
   const [viewMode, setViewMode] = useState<'kanban' | 'overview'>('overview');
+  const [userInfo, setUserInfo] = useState<Profile | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -25,6 +29,25 @@ export default function AdminDashboardPage() {
 
   const fetchData = async () => {
     try {
+      // 사용자 인증 확인
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      // 프로필 조회
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setUserInfo(profile);
+      }
+
       // 미배정 업무 조회
       const { data: unassigned } = await supabase
         .from('tasks')
@@ -217,7 +240,7 @@ export default function AdminDashboardPage() {
     return 'bg-gray-50 border-gray-200';
   };
 
-  const getUrgencyBadge = (dueDate: string, status: string) => {
+  const getUrgencyBadge = (dueDate: string, status: string): JSX.Element | null => {
     if (status === 'Done') return null;
     
     const days = getDaysUntilDue(dueDate);
@@ -239,26 +262,33 @@ export default function AdminDashboardPage() {
     );
   }
 
+  if (!userInfo) {
+    return null;
+  }
+
   const stats = getStatistics();
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      {/* 헤더 */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
-            <p className="mt-1 text-gray-600">기획홍보팀 업무 현황</p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('overview')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === 'overview'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
+    <div className="min-h-screen bg-gray-100">
+      <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
+      
+      <div className="p-6">
+        {/* 헤더 */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
+              <p className="mt-1 text-gray-600">기획홍보팀 업무 현황</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('overview')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === 'overview'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
               📊 업무 현황
             </button>
             <button
@@ -273,6 +303,7 @@ export default function AdminDashboardPage() {
             </button>
           </div>
         </div>
+      </div>
       </div>
 
       {viewMode === 'overview' ? (
@@ -536,6 +567,8 @@ export default function AdminDashboardPage() {
         >
           {generatingPPT ? '⏳ PPT 생성 중...' : '📊 주간보고서 PPT 생성'}
         </button>
+      </div>
+      </div>
       </div>
     </div>
   );

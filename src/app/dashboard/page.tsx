@@ -1,22 +1,56 @@
 /**
- * 팀원 개인 캘린더 페이지
+ * 팀원 개인 캘린더 페이지 (Material Design)
  * FullCalendar로 업무 진행 상태 관리
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { supabase, Task } from '@/lib/supabase';
+import { supabase, Task, Profile } from '@/lib/supabase';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import TextField from '@mui/material/TextField';
+import CircularProgress from '@mui/material/CircularProgress';
+import Fab from '@mui/material/Fab';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import Divider from '@mui/material/Divider';
+import Badge from '@mui/material/Badge';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import DescriptionIcon from '@mui/icons-material/Description';
+import Header from '@/components/Header';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [userInfo, setUserInfo] = useState<Profile | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [userId, setUserId] = useState<string>('');
+  const [generatingPPT, setGeneratingPPT] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
   useEffect(() => {
     fetchUserAndTasks();
@@ -25,9 +59,22 @@ export default function DashboardPage() {
   const fetchUserAndTasks = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      
+      if (!user) {
+        router.push('/login');
+        return;
+      }
 
-      setUserId(user.id);
+      // 프로필 조회
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setUserInfo(profile);
+      }
 
       // 내 업무만 조회
       const { data } = await supabase
@@ -39,6 +86,9 @@ export default function DashboardPage() {
       setTasks(data || []);
     } catch (error) {
       console.error('데이터 조회 실패:', error);
+      showSnackbar('데이터 조회에 실패했습니다.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,12 +118,12 @@ export default function DashboardPage() {
 
       if (error) throw error;
 
-      alert('상태가 변경되었습니다!');
+      showSnackbar(`상태가 '${status}'로 변경되었습니다!`, 'success');
       fetchUserAndTasks();
       setShowModal(false);
     } catch (error) {
       console.error('상태 변경 실패:', error);
-      alert('상태 변경에 실패했습니다.');
+      showSnackbar('상태 변경에 실패했습니다.', 'error');
     }
   };
 
@@ -105,15 +155,60 @@ export default function DashboardPage() {
 
       if (updateError) throw updateError;
 
-      alert('결과물 이미지가 업로드되었습니다!');
+      showSnackbar('결과물 이미지가 업로드되었습니다!', 'success');
       fetchUserAndTasks();
       setShowModal(false);
     } catch (error) {
       console.error('이미지 업로드 실패:', error);
-      alert('이미지 업로드에 실패했습니다.');
+      showSnackbar('이미지 업로드에 실패했습니다.', 'error');
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  const generateWeeklyReport = async () => {
+    setGeneratingPPT(true);
+    try {
+      const response = await fetch('/api/pptx/generate');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'PPT 생성에 실패했습니다.');
+      }
+
+      const byteCharacters = atob(data.data.content);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { 
+        type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' 
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = data.data.fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showSnackbar(`주간보고서 PPT가 생성되었습니다! (${data.data.taskCount}개 업무 포함)`, 'success');
+    } catch (error: any) {
+      showSnackbar(error.message, 'error');
+    } finally {
+      setGeneratingPPT(false);
+    }
+  };
+
+  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   // FullCalendar 이벤트 데이터 변환
@@ -123,157 +218,392 @@ export default function DashboardPage() {
     start: task.due_date,
     backgroundColor:
       task.status === 'Done'
-        ? '#10b981'
+        ? '#4caf50'
         : task.status === 'Doing'
-        ? '#f59e0b'
-        : '#3b82f6',
+        ? '#ff9800'
+        : '#2196f3',
     borderColor:
       task.status === 'Done'
-        ? '#059669'
+        ? '#388e3c'
         : task.status === 'Doing'
-        ? '#d97706'
-        : '#2563eb',
+        ? '#f57c00'
+        : '#1976d2',
   }));
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Done': return 'success';
+      case 'Doing': return 'warning';
+      case 'Todo': return 'primary';
+      default: return 'default';
+    }
+  };
+
+  const getTasksByStatus = (status: string) => {
+    return tasks.filter((t) => t.status === status);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!userInfo) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      {/* 헤더 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">내 업무 캘린더</h1>
-        <p className="mt-2 text-gray-600">클릭하여 업무 상태를 변경하세요</p>
-      </div>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
+      
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {/* 헤더 */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+            내 업무 캘린더
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            캘린더에서 업무를 클릭하여 상태를 변경하세요
+          </Typography>
+        </Box>
 
-      {/* 캘린더 */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <FullCalendar
-          plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          events={calendarEvents}
-          eventClick={handleEventClick}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,dayGridWeek',
-          }}
-          locale="ko"
-          height="auto"
-        />
-      </div>
+        {/* 통계 카드 */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={4}>
+            <Card elevation={2}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">예정</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                      {getTasksByStatus('Todo').length}
+                    </Typography>
+                  </Box>
+                  <AssignmentIcon sx={{ fontSize: 48, color: 'primary.main', opacity: 0.3 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <Card elevation={2}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">진행중</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 600, color: 'warning.main' }}>
+                      {getTasksByStatus('Doing').length}
+                    </Typography>
+                  </Box>
+                  <PlayCircleIcon sx={{ fontSize: 48, color: 'warning.main', opacity: 0.3 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <Card elevation={2}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">완료</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 600, color: 'success.main' }}>
+                      {getTasksByStatus('Done').length}
+                    </Typography>
+                  </Box>
+                  <CheckCircleIcon sx={{ fontSize: 48, color: 'success.main', opacity: 0.3 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
-      {/* 업무 목록 */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Todo */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            📋 Todo ({tasks.filter((t) => t.status === 'Todo').length})
-          </h2>
-          {tasks
-            .filter((t) => t.status === 'Todo')
-            .map((task) => (
-              <div key={task.id} className="p-3 mb-2 bg-blue-50 rounded border border-blue-200">
-                <p className="font-medium text-sm text-gray-800">{task.title}</p>
-                <p className="text-xs text-gray-500 mt-1">{task.category}</p>
-              </div>
-            ))}
-        </div>
+        {/* 캘린더 */}
+        <Card elevation={2} sx={{ mb: 4 }}>
+          <CardContent>
+            <FullCalendar
+              plugins={[dayGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              events={calendarEvents}
+              eventClick={handleEventClick}
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek',
+              }}
+              locale="ko"
+              height="auto"
+            />
+          </CardContent>
+        </Card>
 
-        {/* Doing */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            ⚡ Doing ({tasks.filter((t) => t.status === 'Doing').length})
-          </h2>
-          {tasks
-            .filter((t) => t.status === 'Doing')
-            .map((task) => (
-              <div key={task.id} className="p-3 mb-2 bg-yellow-50 rounded border border-yellow-200">
-                <p className="font-medium text-sm text-gray-800">{task.title}</p>
-                <p className="text-xs text-gray-500 mt-1">{task.category}</p>
-              </div>
-            ))}
-        </div>
+        {/* 업무 목록 */}
+        <Grid container spacing={3}>
+          {/* Todo */}
+          <Grid item xs={12} md={4}>
+            <Card elevation={2}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <AssignmentIcon color="primary" />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    예정
+                  </Typography>
+                  <Badge badgeContent={getTasksByStatus('Todo').length} color="primary" sx={{ ml: 'auto' }} />
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {getTasksByStatus('Todo').map((task) => (
+                    <Card
+                      key={task.id}
+                      variant="outlined"
+                      sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setShowModal(true);
+                      }}
+                    >
+                      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {task.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {task.category} • {new Date(task.due_date).toLocaleDateString()}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {getTasksByStatus('Todo').length === 0 && (
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                      예정된 업무가 없습니다
+                    </Typography>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Done */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            ✅ Done ({tasks.filter((t) => t.status === 'Done').length})
-          </h2>
-          {tasks
-            .filter((t) => t.status === 'Done')
-            .map((task) => (
-              <div key={task.id} className="p-3 mb-2 bg-green-50 rounded border border-green-200">
-                <p className="font-medium text-sm text-gray-800">{task.title}</p>
-                <p className="text-xs text-gray-500 mt-1">{task.category}</p>
-              </div>
-            ))}
-        </div>
-      </div>
+          {/* Doing */}
+          <Grid item xs={12} md={4}>
+            <Card elevation={2}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <PlayCircleIcon color="warning" />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    진행중
+                  </Typography>
+                  <Badge badgeContent={getTasksByStatus('Doing').length} color="warning" sx={{ ml: 'auto' }} />
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {getTasksByStatus('Doing').map((task) => (
+                    <Card
+                      key={task.id}
+                      variant="outlined"
+                      sx={{ cursor: 'pointer', bgcolor: 'warning.50', '&:hover': { bgcolor: 'warning.100' } }}
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setShowModal(true);
+                      }}
+                    >
+                      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {task.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {task.category} • {new Date(task.due_date).toLocaleDateString()}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {getTasksByStatus('Doing').length === 0 && (
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                      진행중인 업무가 없습니다
+                    </Typography>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      {/* 상세 모달 */}
-      {showModal && selectedTask && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">{selectedTask.title}</h2>
+          {/* Done */}
+          <Grid item xs={12} md={4}>
+            <Card elevation={2}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <CheckCircleIcon color="success" />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    완료
+                  </Typography>
+                  <Badge badgeContent={getTasksByStatus('Done').length} color="success" sx={{ ml: 'auto' }} />
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {getTasksByStatus('Done').map((task) => (
+                    <Card
+                      key={task.id}
+                      variant="outlined"
+                      sx={{ cursor: 'pointer', bgcolor: 'success.50', '&:hover': { bgcolor: 'success.100' } }}
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setShowModal(true);
+                      }}
+                    >
+                      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {task.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {task.category} • {new Date(task.due_date).toLocaleDateString()}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {getTasksByStatus('Done').length === 0 && (
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                      완료된 업무가 없습니다
+                    </Typography>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
 
-            <div className="space-y-3 mb-6">
-              <p><span className="font-semibold">카테고리:</span> {selectedTask.category}</p>
-              <p><span className="font-semibold">요청 부서:</span> {selectedTask.requester_dept}</p>
-              <p><span className="font-semibold">담당자:</span> {selectedTask.requester_name}</p>
-              <p><span className="font-semibold">마감일:</span> {new Date(selectedTask.due_date).toLocaleDateString()}</p>
-              <p><span className="font-semibold">현재 상태:</span> {selectedTask.status}</p>
-              {selectedTask.description && (
-                <p><span className="font-semibold">상세내용:</span><br />{selectedTask.description}</p>
-              )}
-            </div>
+      {/* 주간보고서 작성 FAB */}
+      <Fab
+        color="primary"
+        aria-label="주간보고서 작성"
+        sx={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+        }}
+        onClick={generateWeeklyReport}
+        disabled={generatingPPT}
+      >
+        {generatingPPT ? <CircularProgress size={24} color="inherit" /> : <DescriptionIcon />}
+      </Fab>
 
-            {/* 상태 변경 버튼 */}
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={() => updateTaskStatus('Todo')}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Todo로 변경
-              </button>
-              <button
-                onClick={() => updateTaskStatus('Doing')}
-                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-              >
-                Doing으로 변경
-              </button>
-              <button
-                onClick={() => updateTaskStatus('Done')}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Done으로 변경
-              </button>
-            </div>
-
-            {/* 결과물 이미지 업로드 */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                결과물 이미지 업로드
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    uploadResultImage(e.target.files[0]);
-                  }
-                }}
-                disabled={uploadingImage}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
+      {/* 업무 상세 모달 */}
+      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth>
+        {selectedTask && (
+          <>
+            <DialogTitle>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {selectedTask.title}
+              </Typography>
+              <Chip
+                label={selectedTask.status}
+                color={getStatusColor(selectedTask.status) as any}
+                size="small"
+                sx={{ mt: 1 }}
               />
-            </div>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">카테고리</Typography>
+                  <Typography variant="body1">{selectedTask.category}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">요청 부서</Typography>
+                  <Typography variant="body1">{selectedTask.requester_dept}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">담당자</Typography>
+                  <Typography variant="body1">{selectedTask.requester_name}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">마감일</Typography>
+                  <Typography variant="body1">
+                    {new Date(selectedTask.due_date).toLocaleDateString()}
+                  </Typography>
+                </Box>
+                {selectedTask.description && (
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">상세내용</Typography>
+                    <Typography variant="body1">{selectedTask.description}</Typography>
+                  </Box>
+                )}
+                <Divider />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                    상태 변경
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                      variant={selectedTask.status === 'Todo' ? 'contained' : 'outlined'}
+                      color="primary"
+                      size="small"
+                      onClick={() => updateTaskStatus('Todo')}
+                    >
+                      예정
+                    </Button>
+                    <Button
+                      variant={selectedTask.status === 'Doing' ? 'contained' : 'outlined'}
+                      color="warning"
+                      size="small"
+                      onClick={() => updateTaskStatus('Doing')}
+                    >
+                      진행중
+                    </Button>
+                    <Button
+                      variant={selectedTask.status === 'Done' ? 'contained' : 'outlined'}
+                      color="success"
+                      size="small"
+                      onClick={() => updateTaskStatus('Done')}
+                    >
+                      완료
+                    </Button>
+                  </Box>
+                </Box>
+                <Divider />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                    결과물 이미지 업로드
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<UploadFileIcon />}
+                    disabled={uploadingImage}
+                    fullWidth
+                  >
+                    {uploadingImage ? '업로드 중...' : '파일 선택'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          uploadResultImage(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </Button>
+                </Box>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowModal(false)}>닫기</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
 
-            <button
-              onClick={() => setShowModal(false)}
-              className="w-full px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-            >
-              닫기
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
