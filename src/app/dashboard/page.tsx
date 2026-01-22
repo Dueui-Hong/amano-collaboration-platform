@@ -23,7 +23,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-import TextField from '@mui/material/TextField';
+// import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import Snackbar from '@mui/material/Snackbar';
@@ -54,6 +54,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchUserAndTasks();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUserAndTasks = async () => {

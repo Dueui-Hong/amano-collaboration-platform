@@ -1,5 +1,5 @@
 /**
- * 개선된 관리자 대시보드
+ * 관리자 대시보드 (Material Design 완전 재작성)
  * - 오늘/이번주 업무 통계
  * - 팀원별 업무 현황 요약
  * - Drag & Drop 업무 배정
@@ -13,6 +13,55 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { supabase, Task, Profile } from '@/lib/supabase';
 import Header from '@/components/Header';
 
+// Material-UI Imports
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Paper from '@mui/material/Paper';
+import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import Badge from '@mui/material/Badge';
+// import Fab from '@mui/material/Fab';
+
+// Icons
+import TodayIcon from '@mui/icons-material/Today';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import WarningIcon from '@mui/icons-material/Warning';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import DescriptionIcon from '@mui/icons-material/Description';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+
+interface Statistics {
+  todayTasks: number;
+  weekTasks: number;
+  urgentTasks: number;
+  totalTodo: number;
+  totalDoing: number;
+  totalDone: number;
+}
+
+interface MemberStatistics {
+  todo: number;
+  doing: number;
+  done: number;
+  todayTasks: Task[];
+  urgentTasks: Task[];
+  total: number;
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [unassignedTasks, setUnassignedTasks] = useState<Task[]>([]);
@@ -20,11 +69,17 @@ export default function AdminDashboardPage() {
   const [memberTasks, setMemberTasks] = useState<{ [key: string]: Task[] }>({});
   const [loading, setLoading] = useState(true);
   const [generatingPPT, setGeneratingPPT] = useState(false);
-  const [viewMode, setViewMode] = useState<'kanban' | 'overview'>('overview');
+  const [viewMode, setViewMode] = useState<number>(0); // 0: 업무 현황, 1: 업무 배정
   const [userInfo, setUserInfo] = useState<Profile | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
@@ -84,6 +139,7 @@ export default function AdminDashboardPage() {
       }
     } catch (error) {
       console.error('데이터 조회 실패:', error);
+      showSnackbar('데이터 조회에 실패했습니다.', 'error');
     } finally {
       setLoading(false);
     }
@@ -109,10 +165,11 @@ export default function AdminDashboardPage() {
 
       if (error) throw error;
 
+      showSnackbar('업무가 배정되었습니다!', 'success');
       fetchData();
     } catch (error) {
       console.error('업무 배정 실패:', error);
-      alert('업무 배정에 실패했습니다.');
+      showSnackbar('업무 배정에 실패했습니다.', 'error');
     }
   };
 
@@ -143,28 +200,37 @@ export default function AdminDashboardPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      alert(`PPT가 생성되었습니다! (${data.data.taskCount}개 업무 포함)`);
-    } catch (error: any) {
-      alert(error.message);
+      showSnackbar(`PPT가 생성되었습니다! (${data.data.taskCount}개 업무 포함)`, 'success');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      showSnackbar(errorMessage, 'error');
     } finally {
       setGeneratingPPT(false);
     }
   };
 
+  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   // 통계 계산
-  const getStatistics = () => {
+  const getStatistics = (): Statistics => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay()); // 이번주 일요일
+    weekStart.setDate(today.getDate() - today.getDay());
     
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6); // 이번주 토요일
+    weekEnd.setDate(weekStart.getDate() + 6);
 
     let todayTasks = 0;
     let weekTasks = 0;
-    let urgentTasks = 0; // D-3 이하
+    let urgentTasks = 0;
     let totalTodo = 0;
     let totalDoing = 0;
     let totalDone = 0;
@@ -196,7 +262,7 @@ export default function AdminDashboardPage() {
     return { todayTasks, weekTasks, urgentTasks, totalTodo, totalDoing, totalDone };
   };
 
-  const getMemberStatistics = (memberId: string) => {
+  const getMemberStatistics = (memberId: string): MemberStatistics => {
     const tasks = memberTasks[memberId] || [];
     const todo = tasks.filter(t => t.status === 'Todo').length;
     const doing = tasks.filter(t => t.status === 'Doing').length;
@@ -220,7 +286,7 @@ export default function AdminDashboardPage() {
     return { todo, doing, done, todayTasks, urgentTasks, total: tasks.length };
   };
 
-  const getDaysUntilDue = (dueDate: string) => {
+  const getDaysUntilDue = (dueDate: string): number => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const due = new Date(dueDate);
@@ -228,37 +294,34 @@ export default function AdminDashboardPage() {
     return Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const getUrgencyColor = (dueDate: string, status: string) => {
-    if (status === 'Done') return 'bg-green-50 border-green-200';
+  const getUrgencyColor = (dueDate: string, status: string): string => {
+    if (status === 'Done') return 'success';
     
     const days = getDaysUntilDue(dueDate);
-    if (days < 0) return 'bg-red-50 border-red-400'; // 지난 업무
-    if (days === 0) return 'bg-red-50 border-red-300'; // 오늘 마감
-    if (days <= 3) return 'bg-yellow-50 border-yellow-300'; // 3일 이내
+    if (days < 0) return 'error';
+    if (days === 0) return 'error';
+    if (days <= 3) return 'warning';
     
-    if (status === 'Doing') return 'bg-blue-50 border-blue-200';
-    return 'bg-gray-50 border-gray-200';
+    if (status === 'Doing') return 'info';
+    return 'default';
   };
 
-  const getUrgencyBadge = (dueDate: string, status: string): JSX.Element | null => {
-    if (status === 'Done') return null;
+  const getUrgencyLabel = (dueDate: string, status: string): string => {
+    if (status === 'Done') return '완료';
     
     const days = getDaysUntilDue(dueDate);
-    if (days < 0) return <span className="text-xs font-bold text-red-600">지연</span>;
-    if (days === 0) return <span className="text-xs font-bold text-red-600">오늘 마감</span>;
-    if (days === 1) return <span className="text-xs font-bold text-orange-600">내일 마감</span>;
-    if (days <= 3) return <span className="text-xs font-bold text-yellow-600">D-{days}</span>;
-    return null;
+    if (days < 0) return '지연';
+    if (days === 0) return '오늘';
+    if (days === 1) return '내일';
+    if (days <= 3) return `D-${days}`;
+    return '';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">로딩 중...</p>
-        </div>
-      </div>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress size={60} />
+      </Box>
     );
   }
 
@@ -269,307 +332,456 @@ export default function AdminDashboardPage() {
   const stats = getStatistics();
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
       
-      <div className="p-6">
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* 헤더 */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
-              <p className="mt-1 text-gray-600">기획홍보팀 업무 현황</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setViewMode('overview')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  viewMode === 'overview'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-              📊 업무 현황
-            </button>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === 'kanban'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              📋 업무 배정
-            </button>
-          </div>
-        </div>
-      </div>
-      </div>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DashboardIcon sx={{ fontSize: 40 }} />
+            관리자 대시보드
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            기획홍보팀 업무 현황 및 배정 관리
+          </Typography>
+        </Box>
 
-      {viewMode === 'overview' ? (
-        <>
-          {/* 전체 통계 카드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600">오늘 마감</p>
-              <p className="text-3xl font-bold text-blue-600">{stats.todayTasks}</p>
-              <p className="text-xs text-gray-500 mt-1">개</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600">이번주</p>
-              <p className="text-3xl font-bold text-indigo-600">{stats.weekTasks}</p>
-              <p className="text-xs text-gray-500 mt-1">개</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600">긴급 (D-3)</p>
-              <p className="text-3xl font-bold text-red-600">{stats.urgentTasks}</p>
-              <p className="text-xs text-gray-500 mt-1">개</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600">예정</p>
-              <p className="text-3xl font-bold text-yellow-600">{stats.totalTodo}</p>
-              <p className="text-xs text-gray-500 mt-1">개</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600">진행중</p>
-              <p className="text-3xl font-bold text-blue-600">{stats.totalDoing}</p>
-              <p className="text-xs text-gray-500 mt-1">개</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600">완료</p>
-              <p className="text-3xl font-bold text-green-600">{stats.totalDone}</p>
-              <p className="text-xs text-gray-500 mt-1">개</p>
-            </div>
-          </div>
+        {/* 탭 */}
+        <Paper sx={{ mb: 3 }}>
+          <Tabs value={viewMode} onChange={(e, newValue) => setViewMode(newValue)} centered>
+            <Tab label="📊 업무 현황" icon={<DashboardIcon />} iconPosition="start" />
+            <Tab label="📋 업무 배정" icon={<AssignmentTurnedInIcon />} iconPosition="start" />
+          </Tabs>
+        </Paper>
 
-          {/* 팀원별 현황 */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">팀원별 업무 현황</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {viewMode === 0 ? (
+          /* 업무 현황 탭 */
+          <>
+            {/* 전체 통계 카드 */}
+            <Grid container spacing={2} sx={{ mb: 4 }}>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">오늘 마감</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          {stats.todayTasks}
+                        </Typography>
+                      </Box>
+                      <TodayIcon sx={{ fontSize: 40, color: 'primary.main', opacity: 0.3 }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">이번주</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                          {stats.weekTasks}
+                        </Typography>
+                      </Box>
+                      <DateRangeIcon sx={{ fontSize: 40, color: 'secondary.main', opacity: 0.3 }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">긴급 (D-3)</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: 'error.main' }}>
+                          {stats.urgentTasks}
+                        </Typography>
+                      </Box>
+                      <WarningIcon sx={{ fontSize: 40, color: 'error.main', opacity: 0.3 }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">예정</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: 'warning.main' }}>
+                          {stats.totalTodo}
+                        </Typography>
+                      </Box>
+                      <AssignmentIcon sx={{ fontSize: 40, color: 'warning.main', opacity: 0.3 }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">진행중</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: 'info.main' }}>
+                          {stats.totalDoing}
+                        </Typography>
+                      </Box>
+                      <PlayCircleIcon sx={{ fontSize: 40, color: 'info.main', opacity: 0.3 }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">완료</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: 'success.main' }}>
+                          {stats.totalDone}
+                        </Typography>
+                      </Box>
+                      <CheckCircleIcon sx={{ fontSize: 40, color: 'success.main', opacity: 0.3 }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            {/* 팀원별 업무 현황 */}
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+              팀원별 업무 현황
+            </Typography>
+            <Grid container spacing={3} sx={{ mb: 4 }}>
               {members.map(member => {
                 const memberStats = getMemberStatistics(member.id);
                 return (
-                  <div key={member.id} className="bg-white rounded-lg shadow-md p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">{member.name}</h3>
-                        <p className="text-sm text-gray-600">{member.position}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-gray-900">{memberStats.total}</p>
-                        <p className="text-xs text-gray-500">전체 업무</p>
-                      </div>
-                    </div>
+                  <Grid item xs={12} md={4} key={member.id}>
+                    <Card elevation={3}>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                          <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                              {member.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {member.position}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                              {memberStats.total}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              전체 업무
+                            </Typography>
+                          </Box>
+                        </Box>
 
-                    {/* 상태별 통계 */}
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      <div className="text-center p-2 bg-yellow-50 rounded">
-                        <p className="text-lg font-bold text-yellow-700">{memberStats.todo}</p>
-                        <p className="text-xs text-gray-600">예정</p>
-                      </div>
-                      <div className="text-center p-2 bg-blue-50 rounded">
-                        <p className="text-lg font-bold text-blue-700">{memberStats.doing}</p>
-                        <p className="text-xs text-gray-600">진행중</p>
-                      </div>
-                      <div className="text-center p-2 bg-green-50 rounded">
-                        <p className="text-lg font-bold text-green-700">{memberStats.done}</p>
-                        <p className="text-xs text-gray-600">완료</p>
-                      </div>
-                    </div>
+                        {/* 상태별 통계 */}
+                        <Grid container spacing={1} sx={{ mb: 2 }}>
+                          <Grid item xs={4}>
+                            <Paper sx={{ p: 1, textAlign: 'center', bgcolor: 'warning.50' }}>
+                              <Typography variant="h6" sx={{ fontWeight: 600, color: 'warning.main' }}>
+                                {memberStats.todo}
+                              </Typography>
+                              <Typography variant="caption">예정</Typography>
+                            </Paper>
+                          </Grid>
+                          <Grid item xs={4}>
+                            <Paper sx={{ p: 1, textAlign: 'center', bgcolor: 'info.50' }}>
+                              <Typography variant="h6" sx={{ fontWeight: 600, color: 'info.main' }}>
+                                {memberStats.doing}
+                              </Typography>
+                              <Typography variant="caption">진행중</Typography>
+                            </Paper>
+                          </Grid>
+                          <Grid item xs={4}>
+                            <Paper sx={{ p: 1, textAlign: 'center', bgcolor: 'success.50' }}>
+                              <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
+                                {memberStats.done}
+                              </Typography>
+                              <Typography variant="caption">완료</Typography>
+                            </Paper>
+                          </Grid>
+                        </Grid>
 
-                    {/* 오늘 마감 업무 */}
-                    {memberStats.todayTasks.length > 0 && (
-                      <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded">
-                        <p className="text-sm font-semibold text-red-700 mb-2">
-                          🔥 오늘 마감 ({memberStats.todayTasks.length}개)
-                        </p>
-                        <ul className="space-y-1">
-                          {memberStats.todayTasks.map(task => (
-                            <li key={task.id} className="text-xs text-red-600 truncate">
-                              • {task.title}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                        {/* 오늘 마감 업무 */}
+                        {memberStats.todayTasks.length > 0 && (
+                          <Alert severity="error" sx={{ mb: 1 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                              🔥 오늘 마감 ({memberStats.todayTasks.length}개)
+                            </Typography>
+                            <Box sx={{ mt: 0.5 }}>
+                              {memberStats.todayTasks.map(task => (
+                                <Typography key={task.id} variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
+                                  • {task.title}
+                                </Typography>
+                              ))}
+                            </Box>
+                          </Alert>
+                        )}
 
-                    {/* 긴급 업무 */}
-                    {memberStats.urgentTasks.length > 0 && (
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-                        <p className="text-sm font-semibold text-yellow-700 mb-2">
-                          ⚠️ 긴급 (D-3) ({memberStats.urgentTasks.length}개)
-                        </p>
-                        <ul className="space-y-1">
-                          {memberStats.urgentTasks.map(task => (
-                            <li key={task.id} className="text-xs text-yellow-700 truncate">
-                              • {task.title}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                        {/* 긴급 업무 */}
+                        {memberStats.urgentTasks.length > 0 && (
+                          <Alert severity="warning">
+                            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                              ⚠️ 긴급 (D-3) ({memberStats.urgentTasks.length}개)
+                            </Typography>
+                            <Box sx={{ mt: 0.5 }}>
+                              {memberStats.urgentTasks.map(task => (
+                                <Typography key={task.id} variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
+                                  • {task.title}
+                                </Typography>
+                              ))}
+                            </Box>
+                          </Alert>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
                 );
               })}
-            </div>
-          </div>
+            </Grid>
 
-          {/* 미배정 업무 */}
-          {unassignedTasks.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                미배정 업무 ({unassignedTasks.length}개)
-              </h2>
-              <div className="bg-white rounded-lg shadow p-6">
-                <ul className="space-y-2">
-                  {unassignedTasks.map(task => (
-                    <li key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{task.title}</p>
-                        <p className="text-sm text-gray-600">{task.category} | {task.requester_dept}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-gray-700">
-                          마감: {new Date(task.due_date).toLocaleDateString()}
-                        </p>
-                        {getUrgencyBadge(task.due_date, task.status)}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-        </>
-      ) : (
-        /* 칸반 보드 */
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* 미배정 업무 */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                미배정 업무 ({unassignedTasks.length})
-              </h2>
-              <Droppable droppableId="unassigned">
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`min-h-[400px] ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
-                  >
-                    {unassignedTasks.map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`p-3 mb-2 rounded border ${getUrgencyColor(task.due_date, task.status)} ${
-                              snapshot.isDragging ? 'shadow-lg' : ''
-                            }`}
-                          >
-                            <p className="font-medium text-sm text-gray-800">{task.title}</p>
-                            <p className="text-xs text-gray-500 mt-1">{task.category} | {task.requester_dept}</p>
-                            <div className="flex items-center justify-between mt-2">
-                              <p className="text-xs text-gray-400">
+            {unassignedTasks.length > 0 && (
+              <>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+                  미배정 업무 ({unassignedTasks.length}개)
+                </Typography>
+                <Card elevation={3} sx={{ mb: 4 }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {unassignedTasks.map(task => (
+                        <Paper key={task.id} variant="outlined" sx={{ p: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                {task.title}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {task.category} | {task.requester_dept}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="caption">
                                 {new Date(task.due_date).toLocaleDateString()}
-                              </p>
-                              {getUrgencyBadge(task.due_date, task.status)}
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
+                              </Typography>
+                              {getUrgencyLabel(task.due_date, task.status) && (
+                                <Chip
+                                  label={getUrgencyLabel(task.due_date, task.status)}
+                                  color={getUrgencyColor(task.due_date, task.status) as any}
+                                  size="small"
+                                />
+                              )}
+                            </Box>
+                          </Box>
+                        </Paper>
+                      ))}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </>
+        ) : (
+          /* 업무 배정 탭 (Drag & Drop) */
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Grid container spacing={2}>
+              {/* 미배정 업무 */}
+              <Grid item xs={12} md={3}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                      미배정 업무
+                      <Badge badgeContent={unassignedTasks.length} color="error" sx={{ ml: 2 }} />
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                    <Droppable droppableId="unassigned">
+                      {(provided, snapshot) => (
+                        <Box
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          sx={{
+                            minHeight: 400,
+                            bgcolor: snapshot.isDraggingOver ? 'action.hover' : 'transparent',
+                            borderRadius: 1,
+                            p: 1,
+                          }}
+                        >
+                          {unassignedTasks.map((task, index) => (
+                            <Draggable key={task.id} draggableId={task.id} index={index}>
+                              {(provided, snapshot) => (
+                                <Paper
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  elevation={snapshot.isDragging ? 6 : 1}
+                                  sx={{
+                                    p: 1.5,
+                                    mb: 1,
+                                    cursor: 'grab',
+                                    '&:active': { cursor: 'grabbing' },
+                                  }}
+                                >
+                                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem' }}>
+                                    {task.title}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" display="block">
+                                    {task.category}
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                                    <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                                      {new Date(task.due_date).toLocaleDateString()}
+                                    </Typography>
+                                    {getUrgencyLabel(task.due_date, task.status) && (
+                                      <Chip
+                                        label={getUrgencyLabel(task.due_date, task.status)}
+                                        color={getUrgencyColor(task.due_date, task.status) as any}
+                                        size="small"
+                                        sx={{ height: 18, fontSize: '0.65rem' }}
+                                      />
+                                    )}
+                                  </Box>
+                                </Paper>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </Box>
+                      )}
+                    </Droppable>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-            {/* 팀원별 업무 */}
-            {members.map(member => {
-              const tasks = memberTasks[member.id] || [];
-              const memberStats = getMemberStatistics(member.id);
-              
-              return (
-                <div key={member.id} className="bg-white rounded-lg shadow p-4">
-                  <div className="mb-4">
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      {member.name} ({member.position})
-                    </h2>
-                    <div className="flex gap-2 mt-2">
-                      <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                        Todo: {memberStats.todo}
-                      </span>
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                        Doing: {memberStats.doing}
-                      </span>
-                      <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">
-                        Done: {memberStats.done}
-                      </span>
-                    </div>
-                  </div>
-                  <Droppable droppableId={member.id}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`min-h-[400px] ${snapshot.isDraggingOver ? 'bg-green-50' : ''}`}
-                      >
-                        {tasks.map((task, index) => (
-                          <Draggable key={task.id} draggableId={task.id} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`p-3 mb-2 rounded border ${getUrgencyColor(task.due_date, task.status)} ${
-                                  snapshot.isDragging ? 'shadow-lg' : ''
-                                }`}
-                              >
-                                <p className="font-medium text-sm text-gray-800">{task.title}</p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {task.category} | {task.status}
-                                </p>
-                                <div className="flex items-center justify-between mt-2">
-                                  <p className="text-xs text-gray-400">
-                                    {new Date(task.due_date).toLocaleDateString()}
-                                  </p>
-                                  {getUrgencyBadge(task.due_date, task.status)}
-                                </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              );
-            })}
-          </div>
-        </DragDropContext>
-      )}
+              {/* 팀원별 업무 */}
+              {members.map(member => {
+                const tasks = memberTasks[member.id] || [];
+                const memberStats = getMemberStatistics(member.id);
+                
+                return (
+                  <Grid item xs={12} md={3} key={member.id}>
+                    <Card elevation={3}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                          {member.name}
+                          <Badge badgeContent={tasks.length} color="primary" sx={{ ml: 2 }} />
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                          {member.position}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 0.5, mb: 2 }}>
+                          <Chip label={`Todo: ${memberStats.todo}`} size="small" color="warning" />
+                          <Chip label={`Doing: ${memberStats.doing}`} size="small" color="info" />
+                          <Chip label={`Done: ${memberStats.done}`} size="small" color="success" />
+                        </Box>
+                        <Divider sx={{ mb: 2 }} />
+                        <Droppable droppableId={member.id}>
+                          {(provided, snapshot) => (
+                            <Box
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              sx={{
+                                minHeight: 400,
+                                bgcolor: snapshot.isDraggingOver ? 'success.50' : 'transparent',
+                                borderRadius: 1,
+                                p: 1,
+                              }}
+                            >
+                              {tasks.map((task, index) => (
+                                <Draggable key={task.id} draggableId={task.id} index={index}>
+                                  {(provided, snapshot) => (
+                                    <Paper
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      elevation={snapshot.isDragging ? 6 : 1}
+                                      sx={{
+                                        p: 1.5,
+                                        mb: 1,
+                                        cursor: 'grab',
+                                        bgcolor: 
+                                          task.status === 'Done' ? 'success.50' :
+                                          task.status === 'Doing' ? 'info.50' : 'transparent',
+                                        '&:active': { cursor: 'grabbing' },
+                                      }}
+                                    >
+                                      <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem' }}>
+                                        {task.title}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary" display="block">
+                                        {task.category} | {task.status}
+                                      </Typography>
+                                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                                          {new Date(task.due_date).toLocaleDateString()}
+                                        </Typography>
+                                        {getUrgencyLabel(task.due_date, task.status) && (
+                                          <Chip
+                                            label={getUrgencyLabel(task.due_date, task.status)}
+                                            color={getUrgencyColor(task.due_date, task.status) as any}
+                                            size="small"
+                                            sx={{ height: 18, fontSize: '0.65rem' }}
+                                          />
+                                        )}
+                                      </Box>
+                                    </Paper>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </Box>
+                          )}
+                        </Droppable>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </DragDropContext>
+        )}
 
-      {/* 하단 버튼 */}
-      <div className="mt-6 flex justify-center gap-4">
-        <button
-          onClick={fetchData}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          🔄 새로고침
-        </button>
-        <button
-          onClick={generatePPT}
-          disabled={generatingPPT}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-        >
-          {generatingPPT ? '⏳ PPT 생성 중...' : '📊 주간보고서 PPT 생성'}
-        </button>
-      </div>
-      </div>
-      </div>
-    </div>
+        {/* 하단 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
+          <Button
+            variant="contained"
+            startIcon={<RefreshIcon />}
+            onClick={fetchData}
+            size="large"
+          >
+            새로고침
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={generatingPPT ? <CircularProgress size={20} color="inherit" /> : <DescriptionIcon />}
+            onClick={generatePPT}
+            disabled={generatingPPT}
+            size="large"
+          >
+            {generatingPPT ? 'PPT 생성 중...' : '주간보고서 PPT 생성'}
+          </Button>
+        </Box>
+      </Container>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
