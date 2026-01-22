@@ -160,15 +160,15 @@ export default function LoginPage() {
         <Zoom in timeout={800}>
           <Box
             sx={{
-              // Glassmorphism Card - 시인성 개선
-              background: 'rgba(255, 255, 255, 0.25)',
-              backdropFilter: 'blur(30px) saturate(180%)',
-              border: '2px solid rgba(255, 255, 255, 0.4)',
+              // Glassmorphism Card - 시인성 대폭 개선
+              background: 'rgba(255, 255, 255, 0.35)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              border: '2px solid rgba(255, 255, 255, 0.5)',
               borderRadius: '32px',
               boxShadow: `
-                0 8px 32px rgba(0, 0, 0, 0.2),
-                0 2px 8px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5)
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6)
               `,
               p: 5,
               position: 'relative',
@@ -177,9 +177,9 @@ export default function LoginPage() {
               '&:hover': {
                 transform: 'translateY(-8px)',
                 boxShadow: `
-                  0 16px 48px rgba(0, 0, 0, 0.25),
-                  0 4px 16px rgba(0, 0, 0, 0.12),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.6)
+                  0 16px 48px rgba(0, 0, 0, 0.35),
+                  0 4px 16px rgba(0, 0, 0, 0.18),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.7)
                 `,
               },
             }}
@@ -263,12 +263,12 @@ export default function LoginPage() {
                     sx={{
                       mb: 3,
                       borderRadius: '16px',
-                      background: 'rgba(255, 255, 255, 0.25)',
+                      background: 'rgba(255, 255, 255, 0.4)',
                       backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      color: '#fff',
-                      fontWeight: 600,
-                      '& .MuiAlert-icon': { color: '#fff' },
+                      border: '2px solid rgba(255, 0, 0, 0.3)',
+                      color: '#8B0000',
+                      fontWeight: 700,
+                      '& .MuiAlert-icon': { color: '#D32F2F' },
                     }}
                   >
                     {error}
@@ -285,31 +285,31 @@ export default function LoginPage() {
                   sx={{
                     mb: 2.5,
                     '& .MuiOutlinedInput-root': {
-                      background: 'rgba(255, 255, 255, 0.2)',
+                      background: 'rgba(255, 255, 255, 0.35)',
                       backdropFilter: 'blur(10px)',
                       borderRadius: '16px',
-                      color: '#fff',
-                      fontWeight: 500,
+                      color: '#003D5C',
+                      fontWeight: 600,
                       transition: 'all 0.3s ease',
                       '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        borderColor: 'rgba(255, 255, 255, 0.6)',
                         borderWidth: '2px',
                       },
                       '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.25)',
-                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.6)' },
+                        background: 'rgba(255, 255, 255, 0.45)',
+                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.8)' },
                       },
                       '&.Mui-focused': {
-                        background: 'rgba(255, 255, 255, 0.3)',
-                        '& fieldset': { borderColor: '#fff', borderWidth: '2px' },
+                        background: 'rgba(255, 255, 255, 0.5)',
+                        '& fieldset': { borderColor: '#0081C0', borderWidth: '2px' },
                       },
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontWeight: 500,
-                      '&.Mui-focused': { color: '#fff' },
+                      color: '#003D5C',
+                      fontWeight: 600,
+                      '&.Mui-focused': { color: '#0081C0' },
                     },
-                    '& .MuiInputAdornment-root': { color: 'rgba(255, 255, 255, 0.7)' },
+                    '& .MuiInputAdornment-root': { color: '#0081C0' },
                   }}
                   InputProps={{
                     startAdornment: (
@@ -330,31 +330,31 @@ export default function LoginPage() {
                   sx={{
                     mb: 3,
                     '& .MuiOutlinedInput-root': {
-                      background: 'rgba(255, 255, 255, 0.2)',
+                      background: 'rgba(255, 255, 255, 0.35)',
                       backdropFilter: 'blur(10px)',
                       borderRadius: '16px',
-                      color: '#fff',
-                      fontWeight: 500,
+                      color: '#003D5C',
+                      fontWeight: 600,
                       transition: 'all 0.3s ease',
                       '& fieldset': {
-                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        borderColor: 'rgba(255, 255, 255, 0.6)',
                         borderWidth: '2px',
                       },
                       '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.25)',
-                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.6)' },
+                        background: 'rgba(255, 255, 255, 0.45)',
+                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.8)' },
                       },
                       '&.Mui-focused': {
-                        background: 'rgba(255, 255, 255, 0.3)',
-                        '& fieldset': { borderColor: '#fff', borderWidth: '2px' },
+                        background: 'rgba(255, 255, 255, 0.5)',
+                        '& fieldset': { borderColor: '#0081C0', borderWidth: '2px' },
                       },
                     },
                     '& .MuiInputLabel-root': {
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontWeight: 500,
-                      '&.Mui-focused': { color: '#fff' },
+                      color: '#003D5C',
+                      fontWeight: 600,
+                      '&.Mui-focused': { color: '#0081C0' },
                     },
-                    '& .MuiInputAdornment-root': { color: 'rgba(255, 255, 255, 0.7)' },
+                    '& .MuiInputAdornment-root': { color: '#0081C0' },
                   }}
                   InputProps={{
                     startAdornment: (
@@ -367,7 +367,7 @@ export default function LoginPage() {
                         <IconButton
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
-                          sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                          sx={{ color: '#0081C0' }}
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -437,17 +437,17 @@ export default function LoginPage() {
                     sx={{
                       py: 1,
                       borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.25)',
+                      background: 'rgba(255, 255, 255, 0.4)',
                       backdropFilter: 'blur(10px)',
-                      border: '2px solid rgba(255, 255, 255, 0.5)',
-                      color: '#fff',
-                      fontWeight: 600,
+                      border: '2px solid rgba(255, 255, 255, 0.6)',
+                      color: '#003D5C',
+                      fontWeight: 700,
                       fontSize: '0.85rem',
                       textTransform: 'none',
                       transition: 'all 0.2s ease',
                       '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.35)',
-                        border: '2px solid rgba(255, 255, 255, 0.7)',
+                        background: 'rgba(255, 255, 255, 0.5)',
+                        border: '2px solid rgba(255, 255, 255, 0.8)',
                         transform: 'translateY(-2px)',
                       },
                     }}
@@ -462,17 +462,17 @@ export default function LoginPage() {
                     sx={{
                       py: 1,
                       borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.25)',
+                      background: 'rgba(255, 255, 255, 0.4)',
                       backdropFilter: 'blur(10px)',
-                      border: '2px solid rgba(255, 255, 255, 0.5)',
-                      color: '#fff',
-                      fontWeight: 600,
+                      border: '2px solid rgba(255, 255, 255, 0.6)',
+                      color: '#003D5C',
+                      fontWeight: 700,
                       fontSize: '0.85rem',
                       textTransform: 'none',
                       transition: 'all 0.2s ease',
                       '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.35)',
-                        border: '2px solid rgba(255, 255, 255, 0.7)',
+                        background: 'rgba(255, 255, 255, 0.5)',
+                        border: '2px solid rgba(255, 255, 255, 0.8)',
                         transform: 'translateY(-2px)',
                       },
                     }}
