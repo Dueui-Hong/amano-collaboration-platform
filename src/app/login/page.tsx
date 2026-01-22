@@ -1,5 +1,9 @@
 /**
- * 로그인 페이지 (Material Design)
+ * 로그인 페이지 - Modern Glassmorphism Design 2025
+ * - Glassmorphism (유리 질감)
+ * - Animated Gradient Background
+ * - Floating Elements
+ * - Smooth Transitions
  */
 
 'use client';
@@ -9,23 +13,30 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Fade from '@mui/material/Fade';
+import Zoom from '@mui/material/Zoom';
+
+// Icons
+import EmailIcon from '@mui/icons-material/Email';
+import LockIcon from '@mui/icons-material/Lock';
 import LoginIcon from '@mui/icons-material/Login';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import BusinessIcon from '@mui/icons-material/Business';
-import PersonIcon from '@mui/icons-material/Person';
+import SparklesIcon from '@mui/icons-material/AutoAwesome';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -69,6 +80,11 @@ export default function LoginPage() {
     }
   };
 
+  const quickLogin = (email: string, pwd: string) => {
+    setEmail(email);
+    setPassword(pwd);
+  };
+
   return (
     <Box
       sx={{
@@ -76,127 +92,414 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        py: 4,
+        position: 'relative',
+        overflow: 'hidden',
+        // Animated Gradient Background - 아마노코리아 브랜드 컬러 기반
+        background: `
+          linear-gradient(135deg, 
+            #0081C0 0%, 
+            #005A8D 25%,
+            #0095D9 50%,
+            #00ADD8 75%,
+            #0081C0 100%
+          )
+        `,
+        backgroundSize: '400% 400%',
+        animation: 'gradientShift 15s ease infinite',
+        '@keyframes gradientShift': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
       }}
     >
-      <Container maxWidth="sm">
-        <Card elevation={8}>
-          <CardContent sx={{ p: 4 }}>
-            {/* 로고 및 제목 */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <BusinessIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-                아마노코리아
-              </Typography>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                업무 관리 시스템
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                기획홍보팀 PPT 자동화 시스템
-              </Typography>
-            </Box>
+      {/* Floating Background Elements */}
+      <Box
+        sx={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          zIndex: 0,
+        }}
+      >
+        {[...Array(6)].map((_, i) => (
+          <Box
+            key={i}
+            sx={{
+              position: 'absolute',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              animation: `float${i} ${15 + i * 2}s ease-in-out infinite`,
+              [`@keyframes float${i}`]: {
+                '0%, 100%': {
+                  transform: `translate(${i * 20}vw, ${i * 10}vh) scale(1)`,
+                },
+                '50%': {
+                  transform: `translate(${(i + 1) * 25}vw, ${(i + 1) * 15}vh) scale(1.2)`,
+                },
+              },
+              ...(i % 2 === 0 ? {
+                width: `${100 + i * 50}px`,
+                height: `${100 + i * 50}px`,
+                left: `${i * 15}%`,
+                top: `${i * 10}%`,
+              } : {
+                width: `${150 + i * 40}px`,
+                height: `${150 + i * 40}px`,
+                right: `${i * 10}%`,
+                bottom: `${i * 15}%`,
+              }),
+            }}
+          />
+        ))}
+      </Box>
 
-            <Divider sx={{ my: 3 }} />
+      <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
+        <Zoom in timeout={800}>
+          <Box
+            sx={{
+              // Glassmorphism Card - 시인성 개선
+              background: 'rgba(255, 255, 255, 0.25)',
+              backdropFilter: 'blur(30px) saturate(180%)',
+              border: '2px solid rgba(255, 255, 255, 0.4)',
+              borderRadius: '32px',
+              boxShadow: `
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                0 2px 8px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5)
+              `,
+              p: 5,
+              position: 'relative',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-8px)',
+                boxShadow: `
+                  0 16px 48px rgba(0, 0, 0, 0.25),
+                  0 4px 16px rgba(0, 0, 0, 0.12),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.6)
+                `,
+              },
+            }}
+          >
+            {/* Sparkle Effect */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: -50,
+                right: -50,
+                width: 150,
+                height: 150,
+                background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)',
+                borderRadius: '50%',
+                animation: 'pulse 3s ease-in-out infinite',
+                '@keyframes pulse': {
+                  '0%, 100%': { opacity: 0.4, transform: 'scale(1)' },
+                  '50%': { opacity: 0.8, transform: 'scale(1.1)' },
+                },
+              }}
+            />
 
-            {/* 로그인 폼 */}
-            <form onSubmit={handleLogin}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            {/* Header */}
+            <Fade in timeout={1000}>
+              <Box sx={{ textAlign: 'center', mb: 5 }}>
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    p: 2,
+                    borderRadius: '20px',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(10px)',
+                    mb: 2,
+                  }}
+                >
+                  <BusinessIcon sx={{ fontSize: 56, color: '#fff' }} />
+                </Box>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 800,
+                    color: '#fff',
+                    mb: 1,
+                    textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                    letterSpacing: '-0.5px',
+                  }}
+                >
+                  아마노코리아
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+                  <SparklesIcon sx={{ fontSize: 20, color: 'rgba(255,255,255,0.9)' }} />
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: 'rgba(255,255,255,0.95)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    업무 관리 시스템
+                  </Typography>
+                  <SparklesIcon sx={{ fontSize: 20, color: 'rgba(255,255,255,0.9)' }} />
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.85)',
+                    fontSize: '0.95rem',
+                  }}
+                >
+                  기획홍보팀 PPT 자동화 플랫폼
+                </Typography>
+              </Box>
+            </Fade>
+
+            {/* Login Form */}
+            <Fade in timeout={1200}>
+              <Box component="form" onSubmit={handleLogin}>
                 {error && (
-                  <Alert severity="error" onClose={() => setError('')}>
+                  <Alert
+                    severity="error"
+                    sx={{
+                      mb: 3,
+                      borderRadius: '16px',
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      color: '#fff',
+                      fontWeight: 600,
+                      '& .MuiAlert-icon': { color: '#fff' },
+                    }}
+                  >
                     {error}
                   </Alert>
                 )}
 
                 <TextField
+                  fullWidth
                   label="이메일"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  fullWidth
-                  variant="outlined"
-                  autoComplete="email"
+                  sx={{
+                    mb: 2.5,
+                    '& .MuiOutlinedInput-root': {
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: '16px',
+                      color: '#fff',
+                      fontWeight: 500,
+                      transition: 'all 0.3s ease',
+                      '& fieldset': {
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        borderWidth: '2px',
+                      },
+                      '&:hover': {
+                        background: 'rgba(255, 255, 255, 0.25)',
+                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.6)' },
+                      },
+                      '&.Mui-focused': {
+                        background: 'rgba(255, 255, 255, 0.3)',
+                        '& fieldset': { borderColor: '#fff', borderWidth: '2px' },
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: 500,
+                      '&.Mui-focused': { color: '#fff' },
+                    },
+                    '& .MuiInputAdornment-root': { color: 'rgba(255, 255, 255, 0.7)' },
+                  }}
                   InputProps={{
-                    startAdornment: <PersonIcon sx={{ mr: 1, color: 'action.active' }} />,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon />
+                      </InputAdornment>
+                    ),
                   }}
                 />
 
                 <TextField
+                  fullWidth
                   label="비밀번호"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  fullWidth
-                  variant="outlined"
-                  autoComplete="current-password"
+                  sx={{
+                    mb: 3,
+                    '& .MuiOutlinedInput-root': {
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: '16px',
+                      color: '#fff',
+                      fontWeight: 500,
+                      transition: 'all 0.3s ease',
+                      '& fieldset': {
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        borderWidth: '2px',
+                      },
+                      '&:hover': {
+                        background: 'rgba(255, 255, 255, 0.25)',
+                        '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.6)' },
+                      },
+                      '&.Mui-focused': {
+                        background: 'rgba(255, 255, 255, 0.3)',
+                        '& fieldset': { borderColor: '#fff', borderWidth: '2px' },
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: 500,
+                      '&.Mui-focused': { color: '#fff' },
+                    },
+                    '& .MuiInputAdornment-root': { color: 'rgba(255, 255, 255, 0.7)' },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
 
                 <Button
                   type="submit"
+                  fullWidth
                   variant="contained"
                   size="large"
                   disabled={loading}
-                  fullWidth
-                  startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
-                  sx={{ py: 1.5, mt: 1 }}
+                  startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
+                  sx={{
+                    py: 1.8,
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #0081C0 0%, #005A8D 100%)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    textTransform: 'none',
+                    boxShadow: '0 8px 24px rgba(0, 129, 192, 0.3)',
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #0095D9 0%, #0081C0 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 32px rgba(0, 129, 192, 0.4)',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0px)',
+                    },
+                    '&.Mui-disabled': {
+                      background: 'rgba(255, 255, 255, 0.3)',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                    },
+                  }}
                 >
                   {loading ? '로그인 중...' : '로그인'}
                 </Button>
               </Box>
-            </form>
+            </Fade>
 
-            <Divider sx={{ my: 3 }} />
-
-            {/* 테스트 계정 안내 */}
-            <Paper elevation={0} sx={{ bgcolor: 'grey.100', p: 2 }}>
-              <Typography variant="caption" color="text.secondary" display="block" gutterBottom sx={{ fontWeight: 600 }}>
-                💡 테스트 계정 안내
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-                <Box>
-                  <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
-                    팀장 (관리자)
-                  </Typography>
-                  <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
-                    • 김민석: minseok_kim1@amano.co.kr / 1111
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                    팀원
-                  </Typography>
-                  <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
-                    • 홍세영 (계장): seyoung_hong@amano.co.kr / 1111
-                  </Typography>
-                  <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
-                    • 최예지 (사원): yeji_choi@amano.co.kr / 1111
-                  </Typography>
-                  <Typography variant="caption" display="block" sx={{ fontSize: '0.7rem' }}>
-                    • 홍두의 (사원): dueui_hong@amano.co.kr / 1111
-                  </Typography>
+            {/* Quick Login */}
+            <Fade in timeout={1400}>
+              <Box sx={{ mt: 4 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    textAlign: 'center',
+                    color: 'rgba(255,255,255,0.8)',
+                    mb: 2,
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  ⚡ 빠른 로그인
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5 }}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    onClick={() => quickLogin('minseok_kim1@amano.co.kr', '1111')}
+                    sx={{
+                      py: 1,
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      backdropFilter: 'blur(10px)',
+                      border: '2px solid rgba(255, 255, 255, 0.5)',
+                      color: '#fff',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      textTransform: 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: 'rgba(255, 255, 255, 0.35)',
+                        border: '2px solid rgba(255, 255, 255, 0.7)',
+                        transform: 'translateY(-2px)',
+                      },
+                    }}
+                  >
+                    👔 팀장
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    onClick={() => quickLogin('dueui_hong@amano.co.kr', '1111')}
+                    sx={{
+                      py: 1,
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      backdropFilter: 'blur(10px)',
+                      border: '2px solid rgba(255, 255, 255, 0.5)',
+                      color: '#fff',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      textTransform: 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: 'rgba(255, 255, 255, 0.35)',
+                        border: '2px solid rgba(255, 255, 255, 0.7)',
+                        transform: 'translateY(-2px)',
+                      },
+                    }}
+                  >
+                    💼 팀원
+                  </Button>
                 </Box>
               </Box>
-            </Paper>
+            </Fade>
 
-            {/* 링크 */}
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => router.push('/request')}
+            {/* Footer */}
+            <Fade in timeout={1600}>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  textAlign: 'center',
+                  color: 'rgba(255,255,255,0.7)',
+                  mt: 4,
+                  fontSize: '0.8rem',
+                }}
               >
-                업무 요청 페이지로 이동 →
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* 하단 안내 */}
-        <Typography variant="body2" color="white" sx={{ textAlign: 'center', mt: 3, opacity: 0.8 }}>
-          © 2026 아마노코리아. All rights reserved.
-        </Typography>
+                © 2026 아마노코리아. All rights reserved.
+              </Typography>
+            </Fade>
+          </Box>
+        </Zoom>
       </Container>
     </Box>
   );
