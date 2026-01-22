@@ -12,6 +12,12 @@
   - 긴급 업무 자동 강조 (오늘 마감, D-3 이하)
 - **업무 배분**: 팀장이 Drag & Drop으로 팀원에게 업무 배정
 - **개인 캘린더**: 팀원이 FullCalendar로 업무 진행 상태 관리
+- **📄 업무 상세 페이지**: 모든 업무의 상세 정보 조회 및 관리 (NEW!)
+  - 권한 기반 상태 변경 (Todo/Doing/Done)
+  - 결과물 이미지 업로드 및 갤러리
+  - 긴급도 알림 시스템
+- **로그아웃 & 계정 설정**: 비밀번호 변경 및 안전한 로그아웃
+- **주간보고서 FAB**: 팀원도 개별적으로 주간보고서 PPT 생성 가능
 - **PPT 자동 생성**: 매주 금요일, 완료된 업무를 회사 양식의 PPT로 자동 생성
 
 ### 📊 관리자 대시보드 주요 기능
@@ -26,11 +32,13 @@
   - 🟡 긴급(D-3)
   - 🔵 진행중
   - 🟢 완료
+- **📄 업무 클릭**: 모든 업무 카드 클릭 시 상세 페이지로 이동 (NEW!)
 
 👉 **상세 가이드**: [ADMIN_DASHBOARD_GUIDE.md](./ADMIN_DASHBOARD_GUIDE.md)
+👉 **업무 상세 페이지 가이드**: [TASK_DETAIL_FEATURE.md](./TASK_DETAIL_FEATURE.md)
 
 ### 기술 스택
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **Frontend**: Next.js 14, TypeScript, **Material-UI (MUI)**, Tailwind CSS
 - **Backend**: Next.js API Routes, Supabase
 - **Database**: Supabase (PostgreSQL + RLS)
 - **Storage**: Supabase Storage (이미지 첨부)
@@ -48,6 +56,8 @@
 - **로그인**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/login
 - **관리자 대시보드**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/admin/dashboard
 - **팀원 캘린더**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/dashboard
+- **계정 설정**: https://3000-isotlhp28qrkawj35ieh7-cc2fbc16.sandbox.novita.ai/settings
+- **업무 상세 페이지**: `/tasks/[업무ID]` (업무 클릭 시 자동 이동)
 
 ### Supabase 프로젝트
 - **Project URL**: https://wsredeftfoelzgkdalhx.supabase.co
