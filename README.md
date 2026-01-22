@@ -6,6 +6,10 @@
 
 ### 핵심 기능
 - **공개 요청 폼**: 외부 부서에서 로그인 없이 업무 요청 가능
+- **➕ 팀 내부 업무 등록**: 팀원이 본인 업무 직접 등록 (NEW!)
+  - 팀원: 본인 업무만 생성/조회
+  - 관리자: 모든 업무 조회/수정/삭제
+  - 권한 기반 UI/UX
 - **📊 관리자 대시보드**: 팀 전체 업무 현황을 한눈에 파악
   - 오늘 마감 / 이번주 / 긴급(D-3) 업무 통계
   - 팀원별 업무 현황 및 진행률
@@ -36,6 +40,8 @@
 
 👉 **상세 가이드**: [ADMIN_DASHBOARD_GUIDE.md](./ADMIN_DASHBOARD_GUIDE.md)
 👉 **업무 상세 페이지 가이드**: [TASK_DETAIL_FEATURE.md](./TASK_DETAIL_FEATURE.md)
+👉 **팀 내부 업무 등록 가이드**: [INTERNAL_TASK_FEATURE.md](./INTERNAL_TASK_FEATURE.md)
+👉 **서버 자동 재시작 가이드**: [SERVER_AUTO_RESTART.md](./SERVER_AUTO_RESTART.md)
 
 ### 기술 스택
 - **Frontend**: Next.js 14, TypeScript, **Material-UI (MUI)**, Tailwind CSS
