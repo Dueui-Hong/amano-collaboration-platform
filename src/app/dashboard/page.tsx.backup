@@ -360,25 +360,6 @@ export default function DashboardPage() {
           >
             새 업무 등록
           </Button>
-          <Button
-            variant="outlined"
-            startIcon={<DescriptionIcon />}
-            onClick={() => router.push('/board')}
-            sx={{
-              borderColor: '#14B8A6',
-              color: '#14B8A6',
-              fontWeight: 600,
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              '&:hover': {
-                borderColor: '#0F766E',
-                bgcolor: 'rgba(20, 184, 166, 0.05)',
-              }
-            }}
-          >
-            자료 게시판
-          </Button>
         </Box>
 
         {/* 통계 카드 */}
@@ -444,8 +425,7 @@ export default function DashboardPage() {
                 right: 'dayGridMonth,dayGridWeek',
               }}
               locale="ko"
-              height={550}
-              contentHeight={500}
+              height="auto"
             />
           </CardContent>
         </Card>

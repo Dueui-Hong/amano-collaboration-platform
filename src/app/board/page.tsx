@@ -65,6 +65,8 @@ export default function BoardPage() {
     title: '',
     content: '',
   });
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [attachments, setAttachments] = useState<string[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -109,9 +111,11 @@ export default function BoardPage() {
         title: post.title,
         content: post.content || '',
       });
+      setAttachments(post.attachments || []);
     } else {
       setEditingPost(null);
       setFormData({ title: '', content: '' });
+      setAttachments([]);
     }
     setDialogOpen(true);
   };
@@ -120,12 +124,61 @@ export default function BoardPage() {
     setDialogOpen(false);
     setEditingPost(null);
     setFormData({ title: '', content: '' });
+    setAttachments([]);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingFile(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `board-attachments/${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('task-images')
+          .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('task-images')
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl);
+      }
+
+      setAttachments([...attachments, ...uploadedUrls]);
+      alert(`${uploadedUrls.length}개의 파일이 업로드되었습니다.`);
+    } catch (error) {
+      console.error('파일 업로드 실패:', error);
+      alert('파일 업로드에 실패했습니다.');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleRemoveAttachment = (url: string) => {
+    setAttachments(attachments.filter(att => att !== url));
   };
 
   const handleSubmit = async () => {
     if (!userInfo || !formData.title.trim()) return;
 
     try {
+      // Supabase auth user 가져오기
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
       if (editingPost) {
         // 수정
         const { error } = await supabase
@@ -133,33 +186,45 @@ export default function BoardPage() {
           .update({
             title: formData.title,
             content: formData.content,
+            attachments: attachments,
           })
           .eq('id', editingPost.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('수정 오류:', error);
+          throw error;
+        }
         alert('게시글이 수정되었습니다.');
       } else {
-        // 새 글 작성
-        const { error } = await supabase
+        // 새 글 작성 - RLS 정책을 위해 author_id를 auth.uid()와 동일하게
+        const { data, error } = await supabase
           .from('board_posts')
           .insert([
             {
               title: formData.title,
-              content: formData.content,
-              author_id: userInfo.id,
+              content: formData.content || '',
+              author_id: user.id, // auth.uid()와 매칭
               author_name: userInfo.name,
+              views: 0,
+              attachments: attachments,
             },
-          ]);
+          ])
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('작성 오류:', error);
+          alert(`게시글 작성 실패: ${error.message}`);
+          throw error;
+        }
+        console.log('작성 성공:', data);
         alert('게시글이 작성되었습니다.');
       }
 
       handleCloseDialog();
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('게시글 저장 실패:', error);
-      alert('게시글 저장에 실패했습니다.');
+      alert(`게시글 저장에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };
 
@@ -236,6 +301,38 @@ export default function BoardPage() {
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         {post.content}
                       </Typography>
+                      
+                      {/* 첨부 파일 */}
+                      {post.attachments && post.attachments.length > 0 && (
+                        <Box sx={{ mb: 2 }}>
+                          <Chip
+                            icon={<AttachFileIcon />}
+                            label={`첨부파일 ${post.attachments.length}개`}
+                            size="small"
+                            sx={{ bgcolor: colors.secondary.light, color: colors.secondary.dark }}
+                          />
+                          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            {post.attachments.map((url, index) => (
+                              <Typography
+                                key={index}
+                                variant="caption"
+                                component="a"
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{
+                                  color: colors.primary.main,
+                                  textDecoration: 'none',
+                                  '&:hover': { textDecoration: 'underline' },
+                                }}
+                              >
+                                📎 {url.split('/').pop()}
+                              </Typography>
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
+                      
                       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                         <Chip
                           label={post.author_name}
@@ -299,6 +396,64 @@ export default function BoardPage() {
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             />
+            
+            {/* 파일 첨부 */}
+            <Box>
+              <input
+                accept="*/*"
+                style={{ display: 'none' }}
+                id="file-upload"
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+              />
+              <label htmlFor="file-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<AttachFileIcon />}
+                  disabled={uploadingFile}
+                  sx={{ borderColor: colors.secondary.main, color: colors.secondary.main }}
+                >
+                  {uploadingFile ? '업로드 중...' : '파일 첨부'}
+                </Button>
+              </label>
+              
+              {/* 첨부된 파일 목록 */}
+              {attachments.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                    첨부 파일 ({attachments.length}개)
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {attachments.map((url, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          p: 1,
+                          bgcolor: colors.gray[50],
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {url.split('/').pop()}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleRemoveAttachment(url)}
+                          sx={{ color: colors.alert.error }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>

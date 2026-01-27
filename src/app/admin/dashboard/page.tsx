@@ -503,6 +503,46 @@ export default function AdminDashboardPage() {
                 />
               </ListItemButton>
             </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => router.push('/board')}
+                sx={{
+                  minHeight: 80,
+                  px: 2.5,
+                  py: 2.5,
+                  justifyContent: sidebarOpen ? 'initial' : 'center',
+                  borderRadius: 3,
+                  '&:hover': {
+                    background: 'rgba(0, 129, 192, 0.1)',
+                    transform: 'translateX(4px)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <Tooltip title={!sidebarOpen ? "자료 게시판" : ""} placement="right">
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: sidebarOpen ? 3 : 'auto',
+                      justifyContent: 'center',
+                      color: '#0081C0',
+                    }}
+                  >
+                    <DescriptionIcon sx={{ fontSize: 36 }} />
+                  </ListItemIcon>
+                </Tooltip>
+                <ListItemText 
+                  primary="자료 게시판" 
+                  primaryTypographyProps={{
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                  }}
+                  sx={{ 
+                    opacity: sidebarOpen ? 1 : 0,
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
           </List>
         </Box>
 
