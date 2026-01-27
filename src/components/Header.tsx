@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -24,7 +25,6 @@ import Chip from '@mui/material/Chip';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import BusinessIcon from '@mui/icons-material/Business';
 
 interface HeaderProps {
   userName: string;
@@ -111,20 +111,18 @@ export default function Header({ userName, userRole, userEmail }: HeaderProps) {
               },
             }}
           >
-            <BusinessIcon sx={{ fontSize: 28, color: '#fff' }} />
+            <Image 
+              src="/images/logo.png" 
+              alt="아마노코리아 로고" 
+              width={120}
+              height={40}
+              priority
+              style={{
+                objectFit: 'contain',
+                filter: 'brightness(0) invert(1)', // 로고를 흰색으로 변환
+              }}
+            />
             <Box>
-              <Typography 
-                variant="h6" 
-                component="div"
-                sx={{
-                  fontWeight: 700,
-                  color: '#fff',
-                  fontSize: '1.1rem',
-                  lineHeight: 1.2,
-                }}
-              >
-                아마노코리아
-              </Typography>
               <Typography 
                 variant="caption" 
                 sx={{
