@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { supabase, Task, Profile } from '@/lib/supabase';
 import Header from '@/components/Header';
+import { exportTasksToCSV } from '@/lib/csvExport';
 
 // Material-UI Imports
 import Box from '@mui/material/Box';
@@ -46,6 +47,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import DownloadIcon from '@mui/icons-material/Download';
 
 interface Statistics {
   todayTasks: number;
@@ -206,6 +208,15 @@ export default function AdminDashboardPage() {
     } finally {
       setGeneratingPPT(false);
     }
+  };
+
+  const handleExportCSV = () => {
+    const allTasks = [
+      ...unassignedTasks,
+      ...Object.values(memberTasks).flat(),
+    ];
+    exportTasksToCSV(allTasks, members);
+    showSnackbar('CSV 파일이 다운로드되었습니다!', 'success');
   };
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
@@ -500,11 +511,11 @@ export default function AdminDashboardPage() {
           <Container maxWidth="xl" sx={{ py: 4 }}>
             {/* 헤더 */}
             <Box sx={{ mb: 5 }}>
-              <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 2, color: '#003D5C' }}>
-                {viewMode === 0 ? <DashboardIcon sx={{ fontSize: 52 }} /> : <AssignmentTurnedInIcon sx={{ fontSize: 52 }} />}
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1.5, color: '#003D5C' }}>
+                {viewMode === 0 ? <DashboardIcon sx={{ fontSize: 32 }} /> : <AssignmentTurnedInIcon sx={{ fontSize: 32 }} />}
                 {viewMode === 0 ? '업무 현황' : '업무 배정'}
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.1rem', ml: 8 }}>
+              <Typography variant="body1" color="text.secondary" sx={{ fontSize: '0.95rem', ml: 6 }}>
                 {viewMode === 0 ? '기획홍보팀 전체 업무 통계 및 팀원별 현황' : '드래그 앤 드롭으로 업무를 팀원에게 배정하세요'}
               </Typography>
             </Box>
@@ -992,6 +1003,27 @@ export default function AdminDashboardPage() {
                 }}
               >
                 {generatingPPT ? 'PPT 생성 중...' : '주간보고서 PPT 생성'}
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                onClick={handleExportCSV}
+                size="large"
+                sx={{ 
+                  px: 5, 
+                  py: 2, 
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  borderColor: '#10B981',
+                  color: '#10B981',
+                  '&:hover': {
+                    borderColor: '#059669',
+                    bgcolor: 'rgba(16, 185, 129, 0.1)',
+                    transform: 'translateY(-4px)',
+                  },
+                }}
+              >
+                CSV 내보내기
               </Button>
             </Box>
           </Container>
