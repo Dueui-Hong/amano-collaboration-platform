@@ -1,5 +1,5 @@
 /**
- * 홈페이지 - 로그인 또는 요청 페이지로 리다이렉트
+ * 홈페이지 - 로그인 페이지로 리다이렉트
  */
 
 'use client';
@@ -12,7 +12,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // 로그인 페이지로 자동 리다이렉트
-    router.push('/request');
+    router.push('/login');
   }, [router]);
 
   return (

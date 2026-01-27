@@ -483,6 +483,50 @@ export default function LoginPage() {
               </Box>
             </Fade>
 
+            {/* 업무 요청 버튼 */}
+            <Fade in timeout={1500}>
+              <Box sx={{ mt: 3 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    textAlign: 'center',
+                    color: 'rgba(255,255,255,0.8)',
+                    mb: 1.5,
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  로그인 없이 업무 요청하기
+                </Typography>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => router.push('/request')}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(10px)',
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    color: '#003D5C',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    textTransform: 'none',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    '&:hover': {
+                      background: 'rgba(255, 255, 255, 0.35)',
+                      border: '2px solid rgba(255, 255, 255, 0.6)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
+                    },
+                  }}
+                >
+                  📝 업무 요청 페이지로 이동
+                </Button>
+              </Box>
+            </Fade>
+
             {/* Footer */}
             <Fade in timeout={1600}>
               <Typography
