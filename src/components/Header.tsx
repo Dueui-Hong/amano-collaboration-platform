@@ -91,6 +91,7 @@ export default function Header({ userName, userRole, userEmail }: HeaderProps) {
       <Toolbar sx={{ py: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
           <Box
+            onClick={handleDashboard}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -101,6 +102,13 @@ export default function Header({ userName, userRole, userEmail }: HeaderProps) {
               py: 1,
               borderRadius: '12px',
               border: '1px solid rgba(255, 255, 255, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                background: 'rgba(255, 255, 255, 0.25)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              },
             }}
           >
             <BusinessIcon sx={{ fontSize: 28, color: '#fff' }} />
