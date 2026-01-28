@@ -35,8 +35,8 @@ export default function FluentSidebar({ userRole, currentView = 0, onViewChange 
   };
 
   const menuItems = userRole === 'admin' ? [
-    { id: 'status', label: '업무 현황', icon: DashboardIcon, view: 0 },
-    { id: 'assign', label: '업무 배정', icon: AssignmentTurnedInIcon, view: 1 },
+    { id: 'status', label: '업무 현황', icon: DashboardIcon, view: 0, path: '/admin/dashboard' },
+    { id: 'assign', label: '업무 배정', icon: AssignmentTurnedInIcon, view: 1, path: '/admin/dashboard' },
     { id: 'board', label: '자료 게시판', icon: ArticleIcon, path: '/board' },
   ] : [
     { id: 'dashboard', label: '내 업무', icon: CalendarTodayIcon, path: '/dashboard' },
@@ -57,8 +57,13 @@ export default function FluentSidebar({ userRole, currentView = 0, onViewChange 
               key={item.id}
               onClick={() => {
                 if (item.path) {
+                  // 관리자가 게시판에서 대시보드로 이동하는 경우 뷰 저장
+                  if (userRole === 'admin' && item.path === '/admin/dashboard' && item.view !== undefined) {
+                    localStorage.setItem('adminDashboardView', String(item.view));
+                  }
                   handleNavigate(item.path);
                 } else if (onViewChange && item.view !== undefined) {
+                  // 현재 관리자 대시보드 내에서 뷰 변경
                   onViewChange(item.view);
                 }
               }}

@@ -1,9 +1,10 @@
 /**
- * 업무 상세 페이지 (Material Design)
+ * 업무 상세 페이지 - Fluent Design 2.0
  * - 업무 모든 정보 표시
  * - 상태 변경 (관리자/배정된 팀원만)
  * - 이미지 업로드 (배정된 팀원만)
  * - 이미지 갤러리 표시
+ * - Neumorphism Level 4, Glassmorphism Level 2
  */
 
 'use client';
@@ -12,30 +13,19 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase, Task, Profile } from '@/lib/supabase';
 import Header from '@/components/Header';
+import { fluentColors, fluentShadows, fluentRadius } from '@/styles/fluent';
 
-// Material-UI Imports
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
+// Material-UI Components (최소한만 사용)
 import CircularProgress from '@mui/material/CircularProgress';
-import Divider from '@mui/material/Divider';
-import Alert from '@mui/material/Alert';
-import Snackbar from '@mui/material/Snackbar';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import ImageList from '@mui/material/ImageList';
-import ImageListItem from '@mui/material/ImageListItem';
+import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 // Icons
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import EditIcon from '@mui/icons-material/Edit';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -48,6 +38,8 @@ import ImageIcon from '@mui/icons-material/Image';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DeleteIcon from '@mui/icons-material/Delete';
+import WarningIcon from '@mui/icons-material/Warning';
+import FireIcon from '@mui/icons-material/LocalFireDepartment';
 
 export default function TaskDetailPage() {
   const router = useRouter();
@@ -76,7 +68,6 @@ export default function TaskDetailPage() {
 
   const fetchTaskDetail = async () => {
     try {
-      // 사용자 인증 확인
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -84,7 +75,6 @@ export default function TaskDetailPage() {
         return;
       }
 
-      // 프로필 조회
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -95,7 +85,6 @@ export default function TaskDetailPage() {
         setUserInfo(profile);
       }
 
-      // 업무 조회
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .select('*')
@@ -107,7 +96,6 @@ export default function TaskDetailPage() {
 
       setTask(taskData);
 
-      // 배정된 팀원 정보 조회
       if (taskData.assignee_id) {
         const { data: assigneeData } = await supabase
           .from('profiles')
@@ -130,7 +118,6 @@ export default function TaskDetailPage() {
   const updateTaskStatus = async (status: 'Todo' | 'Doing' | 'Done') => {
     if (!task || !userInfo) return;
 
-    // 권한 확인: 관리자 또는 배정된 팀원만 변경 가능
     if (userInfo.role !== 'admin' && task.assignee_id !== userInfo.id) {
       showSnackbar('권한이 없습니다.', 'error');
       return;
@@ -139,7 +126,6 @@ export default function TaskDetailPage() {
     try {
       const updateData: Partial<Task> = { status };
 
-      // Done으로 변경 시 완료 시각 기록
       if (status === 'Done') {
         updateData.completed_at = new Date().toISOString();
       }
@@ -162,7 +148,6 @@ export default function TaskDetailPage() {
   const uploadResultImage = async (file: File) => {
     if (!task || !userInfo) return;
 
-    // 권한 확인: 배정된 팀원만 업로드 가능
     if (task.assignee_id !== userInfo.id) {
       showSnackbar('배정된 팀원만 결과물을 업로드할 수 있습니다.', 'error');
       return;
@@ -183,7 +168,6 @@ export default function TaskDetailPage() {
 
       const { data } = supabase.storage.from('task-images').getPublicUrl(filePath);
 
-      // 기존 이미지 URL에 추가
       const newImageUrls = [...(task.image_urls || []), data.publicUrl];
 
       const { error: updateError } = await supabase
@@ -206,7 +190,6 @@ export default function TaskDetailPage() {
   const deleteTask = async () => {
     if (!task || !userInfo) return;
 
-    // 권한 확인: 관리자만 삭제 가능
     if (userInfo.role !== 'admin') {
       showSnackbar('관리자만 업무를 삭제할 수 있습니다.', 'error');
       return;
@@ -224,7 +207,6 @@ export default function TaskDetailPage() {
 
       showSnackbar('업무가 삭제되었습니다.', 'success');
       
-      // 관리자는 관리자 대시보드로, 팀원은 개인 대시보드로
       setTimeout(() => {
         router.push(userInfo.role === 'admin' ? '/admin/dashboard' : '/dashboard');
       }, 1000);
@@ -259,24 +241,6 @@ export default function TaskDetailPage() {
     }
   };
 
-  const getStatusColor = (status: string): 'default' | 'warning' | 'info' | 'success' => {
-    switch (status) {
-      case 'Todo': return 'warning';
-      case 'Doing': return 'info';
-      case 'Done': return 'success';
-      default: return 'default';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Todo': return <AssignmentIcon />;
-      case 'Doing': return <PlayCircleIcon />;
-      case 'Done': return <CheckCircleIcon />;
-      default: return <AssignmentIcon />;
-    }
-  };
-
   const getDaysUntilDue = (dueDate: string): number => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -290,16 +254,36 @@ export default function TaskDetailPage() {
 
     const days = getDaysUntilDue(dueDate);
     if (days < 0) {
-      return <Alert severity="error">⚠️ 마감일이 지났습니다! ({Math.abs(days)}일 지연)</Alert>;
+      return (
+        <div style={{...styles.alert, ...styles.alertError}}>
+          <WarningIcon style={{fontSize: 24}} />
+          <span>⚠️ 마감일이 지났습니다! ({Math.abs(days)}일 지연)</span>
+        </div>
+      );
     }
     if (days === 0) {
-      return <Alert severity="error">🔥 오늘이 마감일입니다!</Alert>;
+      return (
+        <div style={{...styles.alert, ...styles.alertError}}>
+          <FireIcon style={{fontSize: 24}} />
+          <span>🔥 오늘이 마감일입니다!</span>
+        </div>
+      );
     }
     if (days === 1) {
-      return <Alert severity="warning">⚠️ 내일이 마감일입니다!</Alert>;
+      return (
+        <div style={{...styles.alert, ...styles.alertWarning}}>
+          <WarningIcon style={{fontSize: 24}} />
+          <span>⚠️ 내일이 마감일입니다!</span>
+        </div>
+      );
     }
     if (days <= 3) {
-      return <Alert severity="warning">⏰ 마감일까지 {days}일 남았습니다 (D-{days})</Alert>;
+      return (
+        <div style={{...styles.alert, ...styles.alertWarning}}>
+          <AccessTimeIcon style={{fontSize: 24}} />
+          <span>⏰ 마감일까지 {days}일 남았습니다 (D-{days})</span>
+        </div>
+      );
     }
     return null;
   };
@@ -319,266 +303,287 @@ export default function TaskDetailPage() {
   const canEdit = userInfo.role === 'admin' || task.assignee_id === userInfo.id;
   const canUpload = task.assignee_id === userInfo.id;
 
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'Todo':
+        return { background: `linear-gradient(135deg, ${fluentColors.primary[400]}, ${fluentColors.primary[600]})`, color: '#FFFFFF' };
+      case 'Doing':
+        return { background: `linear-gradient(135deg, ${fluentColors.warning.light}, ${fluentColors.warning.main})`, color: '#FFFFFF' };
+      case 'Done':
+        return { background: `linear-gradient(135deg, ${fluentColors.success.light}, ${fluentColors.success.main})`, color: '#FFFFFF' };
+      default:
+        return { background: fluentColors.neutral[30], color: fluentColors.neutral[80] };
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Todo': return <AssignmentIcon />;
+      case 'Doing': return <PlayCircleIcon />;
+      case 'Done': return <CheckCircleIcon />;
+      default: return <AssignmentIcon />;
+    }
+  };
+
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f0f7 50%, #d5e5f2 100%)',
-      }}
-    >
+    <div style={styles.container}>
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
       
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <div style={styles.content}>
         {/* 상단 버튼 */}
-        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={handleBack}
-          >
-            돌아가기
-          </Button>
+        <div style={styles.topBar}>
+          <button onClick={handleBack} style={styles.backButton}>
+            <ArrowBackIcon style={styles.buttonIcon} />
+            <span>돌아가기</span>
+          </button>
           
-          {/* 관리자만 삭제 버튼 표시 */}
           {userInfo.role === 'admin' && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
+            <button
               onClick={() => setDeleteConfirmOpen(true)}
+              style={styles.deleteButton}
             >
-              업무 삭제
-            </Button>
+              <DeleteIcon style={styles.buttonIcon} />
+              <span>업무 삭제</span>
+            </button>
           )}
-        </Box>
+        </div>
 
         {/* 업무 제목 & 상태 */}
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 600 }}>
-              {task.title}
-            </Typography>
-            <Chip
-              icon={getStatusIcon(task.status)}
-              label={task.status}
-              color={getStatusColor(task.status)}
-              size="medium"
-            />
-          </Box>
-          <Typography variant="body2" color="text.secondary">
-            업무 ID: {task.id}
-          </Typography>
-        </Box>
+        <div style={styles.titleSection}>
+          <div style={styles.titleRow}>
+            <h1 style={styles.title}>{task.title}</h1>
+            <div style={{...styles.statusBadge, ...getStatusStyle(task.status)}}>
+              {getStatusIcon(task.status)}
+              <span style={styles.statusText}>{task.status}</span>
+            </div>
+          </div>
+          <p style={styles.taskId}>업무 ID: {task.id}</p>
+        </div>
 
         {/* 긴급도 알림 */}
         {getUrgencyAlert(task.due_date, task.status)}
 
-        <Grid container spacing={3} sx={{ mt: 1 }}>
+        <div style={styles.mainGrid}>
           {/* 왼쪽: 업무 정보 */}
-          <Grid item xs={12} md={8}>
-            <Card elevation={3}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <DescriptionIcon /> 업무 정보
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
+          <div style={styles.leftColumn}>
+            {/* 업무 정보 카드 */}
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <DescriptionIcon style={styles.cardHeaderIcon} />
+                <h2 style={styles.cardTitle}>업무 정보</h2>
+              </div>
+              <div style={styles.divider} />
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                  {/* 카테고리 */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <CategoryIcon color="action" />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">카테고리</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>{task.category}</Typography>
-                    </Box>
-                  </Box>
+              <div style={styles.infoGrid}>
+                {/* 카테고리 */}
+                <div style={styles.infoRow}>
+                  <CategoryIcon style={styles.infoIcon} />
+                  <div style={styles.infoContent}>
+                    <span style={styles.infoLabel}>카테고리</span>
+                    <span style={styles.infoValue}>{task.category}</span>
+                  </div>
+                </div>
 
-                  {/* 요청 부서 */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <BusinessIcon color="action" />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">요청 부서</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>{task.requester_dept}</Typography>
-                    </Box>
-                  </Box>
+                {/* 요청 부서 */}
+                <div style={styles.infoRow}>
+                  <BusinessIcon style={styles.infoIcon} />
+                  <div style={styles.infoContent}>
+                    <span style={styles.infoLabel}>요청 부서</span>
+                    <span style={styles.infoValue}>{task.requester_dept}</span>
+                  </div>
+                </div>
 
-                  {/* 담당자 */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <PersonIcon color="action" />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">담당자</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>{task.requester_name}</Typography>
-                    </Box>
-                  </Box>
+                {/* 담당자 */}
+                <div style={styles.infoRow}>
+                  <PersonIcon style={styles.infoIcon} />
+                  <div style={styles.infoContent}>
+                    <span style={styles.infoLabel}>담당자</span>
+                    <span style={styles.infoValue}>{task.requester_name}</span>
+                  </div>
+                </div>
 
-                  {/* 마감일 */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <EventIcon color="action" />
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">마감일</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {new Date(task.due_date).toLocaleDateString('ko-KR', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric',
-                          weekday: 'short'
-                        })}
-                      </Typography>
-                    </Box>
-                  </Box>
+                {/* 마감일 */}
+                <div style={styles.infoRow}>
+                  <EventIcon style={styles.infoIcon} />
+                  <div style={styles.infoContent}>
+                    <span style={styles.infoLabel}>마감일</span>
+                    <span style={styles.infoValue}>
+                      {new Date(task.due_date).toLocaleDateString('ko-KR', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        weekday: 'short'
+                      })}
+                    </span>
+                  </div>
+                </div>
 
-                  {/* 배정된 팀원 */}
-                  {assignee && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <PersonIcon color="primary" />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">배정된 팀원</Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {assignee.name} ({assignee.position})
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
+                {/* 배정된 팀원 */}
+                {assignee && (
+                  <div style={styles.infoRow}>
+                    <PersonIcon style={{...styles.infoIcon, color: fluentColors.primary[500]}} />
+                    <div style={styles.infoContent}>
+                      <span style={styles.infoLabel}>배정된 팀원</span>
+                      <span style={styles.infoValue}>
+                        {assignee.name} ({assignee.position})
+                      </span>
+                    </div>
+                  </div>
+                )}
 
-                  {/* 완료 시각 */}
-                  {task.completed_at && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <AccessTimeIcon color="success" />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">완료 시각</Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {new Date(task.completed_at).toLocaleString('ko-KR')}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
+                {/* 완료 시각 */}
+                {task.completed_at && (
+                  <div style={styles.infoRow}>
+                    <AccessTimeIcon style={{...styles.infoIcon, color: fluentColors.success.main}} />
+                    <div style={styles.infoContent}>
+                      <span style={styles.infoLabel}>완료 시각</span>
+                      <span style={styles.infoValue}>
+                        {new Date(task.completed_at).toLocaleString('ko-KR')}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
-                  {/* 상세내용 */}
-                  {task.description && (
-                    <>
-                      <Divider />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                          상세내용
-                        </Typography>
-                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
-                          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                            {task.description}
-                          </Typography>
-                        </Paper>
-                      </Box>
-                    </>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
+                {/* 상세내용 */}
+                {task.description && (
+                  <>
+                    <div style={styles.divider} />
+                    <div style={styles.descriptionSection}>
+                      <span style={styles.infoLabel}>상세내용</span>
+                      <div style={styles.descriptionBox}>
+                        {task.description}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
 
             {/* 이미지 갤러리 */}
             {task.image_urls && task.image_urls.length > 0 && (
-              <Card elevation={3} sx={{ mt: 3 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ImageIcon /> 첨부 이미지 ({task.image_urls.length}개)
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  <ImageList cols={3} gap={8}>
-                    {task.image_urls.map((url, index) => (
-                      <ImageListItem key={index} sx={{ cursor: 'pointer' }} onClick={() => setSelectedImage(url)}>
-                        <img
-                          src={url}
-                          alt={`업무 이미지 ${index + 1}`}
-                          loading="lazy"
-                          style={{ borderRadius: 8, objectFit: 'cover', height: 200 }}
-                        />
-                      </ImageListItem>
-                    ))}
-                  </ImageList>
-                </CardContent>
-              </Card>
+              <div style={{...styles.card, marginTop: '24px'}}>
+                <div style={styles.cardHeader}>
+                  <ImageIcon style={styles.cardHeaderIcon} />
+                  <h2 style={styles.cardTitle}>첨부 이미지 ({task.image_urls.length}개)</h2>
+                </div>
+                <div style={styles.divider} />
+                <div style={styles.imageGrid}>
+                  {task.image_urls.map((url, index) => (
+                    <div
+                      key={index}
+                      style={styles.imageItem}
+                      onClick={() => setSelectedImage(url)}
+                    >
+                      <img
+                        src={url}
+                        alt={`업무 이미지 ${index + 1}`}
+                        style={styles.thumbnailImage}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
-          </Grid>
+          </div>
 
           {/* 오른쪽: 액션 */}
-          <Grid item xs={12} md={4}>
+          <div style={styles.rightColumn}>
             {/* 상태 변경 */}
             {canEdit && (
-              <Card elevation={3} sx={{ mb: 3 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <EditIcon /> 상태 변경
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Button
-                      variant={task.status === 'Todo' ? 'contained' : 'outlined'}
-                      color="warning"
-                      startIcon={<AssignmentIcon />}
-                      onClick={() => updateTaskStatus('Todo')}
-                      fullWidth
-                    >
-                      예정 (Todo)
-                    </Button>
-                    <Button
-                      variant={task.status === 'Doing' ? 'contained' : 'outlined'}
-                      color="info"
-                      startIcon={<PlayCircleIcon />}
-                      onClick={() => updateTaskStatus('Doing')}
-                      fullWidth
-                    >
-                      진행중 (Doing)
-                    </Button>
-                    <Button
-                      variant={task.status === 'Done' ? 'contained' : 'outlined'}
-                      color="success"
-                      startIcon={<CheckCircleIcon />}
-                      onClick={() => updateTaskStatus('Done')}
-                      fullWidth
-                    >
-                      완료 (Done)
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+              <div style={styles.card}>
+                <div style={styles.cardHeader}>
+                  <CheckCircleIcon style={styles.cardHeaderIcon} />
+                  <h2 style={styles.cardTitle}>상태 변경</h2>
+                </div>
+                <div style={styles.divider} />
+                <div style={styles.statusButtonGroup}>
+                  <button
+                    onClick={() => updateTaskStatus('Todo')}
+                    style={{
+                      ...styles.statusButton,
+                      ...(task.status === 'Todo' ? styles.statusButtonActive : {}),
+                      background: task.status === 'Todo'
+                        ? `linear-gradient(135deg, ${fluentColors.primary[400]}, ${fluentColors.primary[600]})`
+                        : fluentColors.neutral[0],
+                      color: task.status === 'Todo' ? '#FFFFFF' : fluentColors.neutral[80],
+                    }}
+                  >
+                    <AssignmentIcon style={styles.statusButtonIcon} />
+                    <span>예정 (Todo)</span>
+                  </button>
+                  <button
+                    onClick={() => updateTaskStatus('Doing')}
+                    style={{
+                      ...styles.statusButton,
+                      ...(task.status === 'Doing' ? styles.statusButtonActive : {}),
+                      background: task.status === 'Doing'
+                        ? `linear-gradient(135deg, ${fluentColors.warning.light}, ${fluentColors.warning.main})`
+                        : fluentColors.neutral[0],
+                      color: task.status === 'Doing' ? '#FFFFFF' : fluentColors.neutral[80],
+                    }}
+                  >
+                    <PlayCircleIcon style={styles.statusButtonIcon} />
+                    <span>진행중 (Doing)</span>
+                  </button>
+                  <button
+                    onClick={() => updateTaskStatus('Done')}
+                    style={{
+                      ...styles.statusButton,
+                      ...(task.status === 'Done' ? styles.statusButtonActive : {}),
+                      background: task.status === 'Done'
+                        ? `linear-gradient(135deg, ${fluentColors.success.light}, ${fluentColors.success.main})`
+                        : fluentColors.neutral[0],
+                      color: task.status === 'Done' ? '#FFFFFF' : fluentColors.neutral[80],
+                    }}
+                  >
+                    <CheckCircleIcon style={styles.statusButtonIcon} />
+                    <span>완료 (Done)</span>
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* 이미지 업로드 */}
             {canUpload && (
-              <Card elevation={3}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <UploadFileIcon /> 결과물 업로드
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  <Button
-                    variant="contained"
-                    component="label"
-                    startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <UploadFileIcon />}
+              <div style={{...styles.card, marginTop: canEdit ? '24px' : '0'}}>
+                <div style={styles.cardHeader}>
+                  <UploadFileIcon style={styles.cardHeaderIcon} />
+                  <h2 style={styles.cardTitle}>결과물 업로드</h2>
+                </div>
+                <div style={styles.divider} />
+                <label style={styles.uploadButton}>
+                  {uploading ? (
+                    <>
+                      <CircularProgress size={20} style={{color: '#FFFFFF'}} />
+                      <span>업로드 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadFileIcon style={styles.uploadIcon} />
+                      <span>이미지 선택</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{display: 'none'}}
+                    onChange={handleFileChange}
                     disabled={uploading}
-                    fullWidth
-                  >
-                    {uploading ? '업로드 중...' : '이미지 선택'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={handleFileChange}
-                    />
-                  </Button>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1, textAlign: 'center' }}>
-                    JPG, PNG, GIF 등 이미지 파일
-                  </Typography>
-                </CardContent>
-              </Card>
+                  />
+                </label>
+                <p style={styles.uploadHint}>JPG, PNG, GIF 등 이미지 파일</p>
+              </div>
             )}
 
             {/* 권한 안내 */}
             {!canEdit && (
-              <Alert severity="info" sx={{ mb: 3 }}>
-                이 업무는 조회만 가능합니다.
-              </Alert>
+              <div style={styles.infoAlert}>
+                <span>ℹ️ 이 업무는 조회만 가능합니다.</span>
+              </div>
             )}
-          </Grid>
-        </Grid>
-      </Container>
+          </div>
+        </div>
+      </div>
 
       {/* 이미지 확대 보기 Dialog */}
       <Dialog
@@ -597,7 +602,9 @@ export default function TaskDetailPage() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedImage(null)}>닫기</Button>
+          <button onClick={() => setSelectedImage(null)} style={styles.dialogButton}>
+            닫기
+          </button>
         </DialogActions>
       </Dialog>
 
@@ -609,31 +616,27 @@ export default function TaskDetailPage() {
         fullWidth
       >
         <DialogContent>
-          <Box sx={{ textAlign: 'center', py: 2 }}>
-            <DeleteIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
-              업무를 삭제하시겠습니까?
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              삭제된 업무는 복구할 수 없습니다.
-            </Typography>
-          </Box>
+          <div style={styles.deleteDialogContent}>
+            <DeleteIcon style={styles.deleteDialogIcon} />
+            <h3 style={styles.deleteDialogTitle}>업무를 삭제하시겠습니까?</h3>
+            <p style={styles.deleteDialogText}>삭제된 업무는 복구할 수 없습니다.</p>
+          </div>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button 
+        <DialogActions style={{padding: '0 24px 24px 24px'}}>
+          <button 
             onClick={() => setDeleteConfirmOpen(false)}
             disabled={deleting}
+            style={styles.dialogButton}
           >
             취소
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
+          </button>
+          <button
             onClick={deleteTask}
             disabled={deleting}
+            style={{...styles.dialogButton, ...styles.deleteConfirmButton}}
           >
-            {deleting ? <CircularProgress size={24} color="inherit" /> : '삭제'}
-          </Button>
+            {deleting ? <CircularProgress size={20} style={{color: '#FFFFFF'}} /> : '삭제'}
+          </button>
         </DialogActions>
       </Dialog>
 
@@ -648,6 +651,364 @@ export default function TaskDetailPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </div>
   );
 }
+
+const styles: { [key: string]: React.CSSProperties } = {
+  container: {
+    minHeight: '100vh',
+    background: `linear-gradient(135deg, ${fluentColors.neutral[10]} 0%, ${fluentColors.neutral[20]} 100%)`,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  },
+
+  content: {
+    maxWidth: '1400px',
+    margin: '0 auto',
+    padding: '32px 24px',
+  },
+
+  topBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px',
+  },
+
+  backButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: fluentColors.neutral[0],
+    border: `2px solid ${fluentColors.neutral[30]}`,
+    borderRadius: fluentRadius.md,
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: 600,
+    color: fluentColors.neutral[80],
+    boxShadow: fluentShadows.neumorph2,
+    transition: 'all 0.3s ease',
+  },
+
+  deleteButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: `linear-gradient(135deg, #f44336, #d32f2f)`,
+    border: 'none',
+    borderRadius: fluentRadius.md,
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: 600,
+    color: '#FFFFFF',
+    boxShadow: fluentShadows.neumorph3,
+    transition: 'all 0.3s ease',
+  },
+
+  buttonIcon: {
+    fontSize: '20px',
+  },
+
+  titleSection: {
+    marginBottom: '24px',
+  },
+
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    marginBottom: '8px',
+    flexWrap: 'wrap',
+  },
+
+  title: {
+    fontSize: '32px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    margin: 0,
+  },
+
+  statusBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    borderRadius: fluentRadius.full,
+    boxShadow: fluentShadows.neumorph2,
+  },
+
+  statusText: {
+    fontSize: '15px',
+    fontWeight: 600,
+  },
+
+  taskId: {
+    fontSize: '14px',
+    color: fluentColors.neutral[60],
+    margin: 0,
+  },
+
+  alert: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px 20px',
+    borderRadius: fluentRadius.lg,
+    marginBottom: '24px',
+    fontSize: '15px',
+    fontWeight: 600,
+    boxShadow: fluentShadows.neumorph2,
+  },
+
+  alertError: {
+    background: `linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(211, 47, 47, 0.15))`,
+    color: '#d32f2f',
+    border: `2px solid rgba(211, 47, 47, 0.3)`,
+  },
+
+  alertWarning: {
+    background: `linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(245, 124, 0, 0.15))`,
+    color: '#f57c00',
+    border: `2px solid rgba(245, 124, 0, 0.3)`,
+  },
+
+  mainGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 400px',
+    gap: '24px',
+  },
+
+  leftColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+
+  rightColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+
+  card: {
+    background: fluentColors.neutral[0],
+    borderRadius: fluentRadius.xl,
+    padding: '24px',
+    boxShadow: fluentShadows.neumorph4,
+    border: `1px solid ${fluentColors.neutral[20]}`,
+  },
+
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '16px',
+  },
+
+  cardHeaderIcon: {
+    fontSize: '28px',
+    color: fluentColors.primary[500],
+  },
+
+  cardTitle: {
+    fontSize: '20px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    margin: 0,
+  },
+
+  divider: {
+    height: '1px',
+    background: fluentColors.neutral[30],
+    marginBottom: '20px',
+  },
+
+  infoGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+
+  infoRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '16px',
+  },
+
+  infoIcon: {
+    fontSize: '24px',
+    color: fluentColors.neutral[60],
+    marginTop: '4px',
+  },
+
+  infoContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    flex: 1,
+  },
+
+  infoLabel: {
+    fontSize: '13px',
+    color: fluentColors.neutral[60],
+    fontWeight: 600,
+  },
+
+  infoValue: {
+    fontSize: '16px',
+    color: fluentColors.neutral[100],
+    fontWeight: 500,
+  },
+
+  descriptionSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+
+  descriptionBox: {
+    padding: '16px',
+    background: fluentColors.neutral[10],
+    borderRadius: fluentRadius.md,
+    border: `1px solid ${fluentColors.neutral[30]}`,
+    fontSize: '14px',
+    color: fluentColors.neutral[80],
+    lineHeight: '1.6',
+    whiteSpace: 'pre-wrap',
+  },
+
+  imageGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '12px',
+  },
+
+  imageItem: {
+    borderRadius: fluentRadius.md,
+    overflow: 'hidden',
+    cursor: 'pointer',
+    boxShadow: fluentShadows.neumorph2,
+    transition: 'all 0.3s ease',
+  },
+
+  thumbnailImage: {
+    width: '100%',
+    height: '150px',
+    objectFit: 'cover',
+    display: 'block',
+  },
+
+  statusButtonGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+
+  statusButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px 20px',
+    borderRadius: fluentRadius.lg,
+    border: `2px solid ${fluentColors.neutral[30]}`,
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: 600,
+    boxShadow: fluentShadows.neumorph2,
+    transition: 'all 0.3s ease',
+    width: '100%',
+  },
+
+  statusButtonActive: {
+    boxShadow: fluentShadows.neumorph3,
+    transform: 'scale(1.02)',
+  },
+
+  statusButtonIcon: {
+    fontSize: '24px',
+  },
+
+  uploadButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+    padding: '16px 24px',
+    background: `linear-gradient(135deg, ${fluentColors.primary[500]}, ${fluentColors.primary[700]})`,
+    borderRadius: fluentRadius.lg,
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: 600,
+    color: '#FFFFFF',
+    boxShadow: fluentShadows.neumorph3,
+    transition: 'all 0.3s ease',
+    border: 'none',
+    width: '100%',
+  },
+
+  uploadIcon: {
+    fontSize: '24px',
+  },
+
+  uploadHint: {
+    marginTop: '12px',
+    fontSize: '13px',
+    color: fluentColors.neutral[60],
+    textAlign: 'center',
+  },
+
+  infoAlert: {
+    padding: '16px 20px',
+    background: `linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(25, 118, 210, 0.15))`,
+    borderRadius: fluentRadius.lg,
+    border: `2px solid rgba(33, 150, 243, 0.3)`,
+    color: fluentColors.primary[700],
+    fontSize: '14px',
+    fontWeight: 600,
+    textAlign: 'center',
+  },
+
+  dialogButton: {
+    padding: '10px 24px',
+    borderRadius: fluentRadius.md,
+    border: `2px solid ${fluentColors.neutral[30]}`,
+    background: fluentColors.neutral[0],
+    color: fluentColors.neutral[80],
+    fontSize: '14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  },
+
+  deleteDialogContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '24px',
+    textAlign: 'center',
+  },
+
+  deleteDialogIcon: {
+    fontSize: '64px',
+    color: '#d32f2f',
+    marginBottom: '16px',
+  },
+
+  deleteDialogTitle: {
+    fontSize: '20px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    marginBottom: '8px',
+  },
+
+  deleteDialogText: {
+    fontSize: '14px',
+    color: fluentColors.neutral[60],
+  },
+
+  deleteConfirmButton: {
+    background: `linear-gradient(135deg, #f44336, #d32f2f)`,
+    color: '#FFFFFF',
+    border: 'none',
+  },
+};

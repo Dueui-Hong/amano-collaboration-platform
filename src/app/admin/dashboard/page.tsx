@@ -69,6 +69,12 @@ export default function FluentAdminDashboard() {
   });
 
   useEffect(() => {
+    // localStorage에서 저장된 뷰 모드 복원
+    const savedView = localStorage.getItem('adminDashboardView');
+    if (savedView) {
+      setViewMode(Number(savedView));
+      localStorage.removeItem('adminDashboardView'); // 한 번 사용 후 제거
+    }
     fetchData();
   }, []);
 

@@ -237,7 +237,10 @@ export default function FluentDashboard() {
     <div style={styles.container}>
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
       
-      <div style={styles.content}>
+      <div style={styles.mainLayout}>
+        <FluentSidebar userRole="member" />
+        
+        <div style={styles.content}>
         {/* Page Header */}
         <div style={styles.pageHeader}>
           <div style={styles.headerLeft}>
@@ -417,6 +420,7 @@ export default function FluentDashboard() {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Floating Action Button */}
       <Fab
@@ -572,7 +576,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   },
 
+  mainLayout: {
+    display: 'flex',
+  },
+
   content: {
+    flex: 1,
     maxWidth: '1400px',
     margin: '0 auto',
     padding: '32px 24px',
