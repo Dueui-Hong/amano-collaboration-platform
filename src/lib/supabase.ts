@@ -15,8 +15,8 @@ const getEnvVar = (key: string): string => {
   return process.env[key] || '';
 };
 
-const supabaseUrl = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://wsredeftfoelzgkdalhx.supabase.co';
-const supabaseAnonKey = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcmVkZWZ0Zm9lbHpna2RhbGh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MjI4NzgsImV4cCI6MjA4Mzk5ODg3OH0.NK-VW8aaV3gr_yIZaF242kvuwhX9th0RNev7DquzVaw';
+const supabaseUrl = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || 'https://xjzooplycdasvzcdipaj.supabase.co';
+const supabaseAnonKey = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqem9vcGx5Y2Rhc3Z6Y2RpcGFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1MjAxNTAsImV4cCI6MjA4NTA5NjE1MH0.N5k33_Rf88vgnyrFgkRi7Hb3UCnag50hzNA2CVbTPjY';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables');
@@ -31,7 +31,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // 서버 사이드용 Supabase 클라이언트 (Service Role Key 사용)
-const supabaseServiceKey = getEnvVar('SUPABASE_SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcmVkZWZ0Zm9lbHpna2RhbGh4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQyMjg3OCwiZXhwIjoyMDgzOTk4ODc4fQ.8pmmg9u_xWByOYt2UXL0kilUUCMvIYj8izPsE0kHKRM';
+const supabaseServiceKey = getEnvVar('SUPABASE_SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqem9vcGx5Y2Rhc3Z6Y2RpcGFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTUyMDE1MCwiZXhwIjoyMDg1MDk2MTUwfQ.dK4PRCYx0oi_j2iV-mE3BM8RuUfWVw5lQYdwvxM3FFs';
 
 export const supabaseAdmin = createClient(
   supabaseUrl,
