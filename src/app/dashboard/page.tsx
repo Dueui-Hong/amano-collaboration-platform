@@ -550,11 +550,14 @@ export default function FluentDashboard() {
       </Snackbar>
 
       <style>{`
+        /* 태블릿 대응 (1200px 이하) */
         @media (max-width: 1200px) {
           .tasks-grid {
             grid-template-columns: 1fr !important;
           }
         }
+        
+        /* 모바일 대응 (768px 이하) */
         @media (max-width: 768px) {
           .stats-grid {
             grid-template-columns: 1fr !important;
@@ -562,6 +565,28 @@ export default function FluentDashboard() {
           .header-actions {
             flex-direction: column !important;
             width: 100% !important;
+          }
+          /* content 패딩 줄이기 */
+          div[style*="padding: 32px 24px"] {
+            padding: 16px 12px !important;
+          }
+          /* 제목 크기 조정 */
+          h1 {
+            font-size: 24px !important;
+          }
+        }
+        
+        /* 작은 모바일 (480px 이하) */
+        @media (max-width: 480px) {
+          div[style*="padding: 32px 24px"] {
+            padding: 12px 8px !important;
+          }
+          h1 {
+            font-size: 20px !important;
+          }
+          button {
+            font-size: 13px !important;
+            padding: 10px 16px !important;
           }
         }
       `}</style>

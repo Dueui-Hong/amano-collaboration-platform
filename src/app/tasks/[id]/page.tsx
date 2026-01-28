@@ -651,6 +651,46 @@ export default function TaskDetailPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <style>{`
+        /* 모바일 대응 (768px 이하) */
+        @media (max-width: 768px) {
+          /* mainGrid를 1열로 변경 */
+          div[style*="grid-template-columns: 1fr 400px"] {
+            grid-template-columns: 1fr !important;
+          }
+          /* content 패딩 줄이기 */
+          div[style*="padding: 32px 24px"] {
+            padding: 16px 12px !important;
+          }
+          /* 제목 크기 조정 */
+          h1 {
+            font-size: 24px !important;
+          }
+          /* 이미지 그리드 2열로 */
+          div[style*="grid-template-columns: repeat(3, 1fr)"] {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        
+        /* 작은 모바일 (480px 이하) */
+        @media (max-width: 480px) {
+          div[style*="padding: 32px 24px"] {
+            padding: 12px 8px !important;
+          }
+          h1 {
+            font-size: 20px !important;
+          }
+          /* 이미지 그리드 1열로 */
+          div[style*="grid-template-columns: repeat(3, 1fr)"] {
+            grid-template-columns: 1fr !important;
+          }
+          button {
+            font-size: 13px !important;
+            padding: 10px 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

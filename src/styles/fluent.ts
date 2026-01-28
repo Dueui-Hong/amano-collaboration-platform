@@ -341,6 +341,24 @@ export const fluentZIndex = {
   tooltip: 1070,
 }
 
+// Responsive breakpoints
+export const fluentBreakpoints = {
+  mobile: 480,
+  tablet: 768,
+  desktop: 1024,
+  wide: 1440,
+}
+
+// Media queries
+export const fluentMediaQueries = {
+  mobile: `@media (max-width: ${fluentBreakpoints.mobile}px)`,
+  tablet: `@media (max-width: ${fluentBreakpoints.tablet}px)`,
+  desktop: `@media (min-width: ${fluentBreakpoints.desktop}px)`,
+  wide: `@media (min-width: ${fluentBreakpoints.wide}px)`,
+  tabletUp: `@media (min-width: ${fluentBreakpoints.tablet + 1}px)`,
+  desktopDown: `@media (max-width: ${fluentBreakpoints.desktop - 1}px)`,
+}
+
 export default {
   colors: fluentColors,
   shadows: fluentShadows,
@@ -351,4 +369,6 @@ export default {
   animations: fluentAnimations,
   transitions: fluentTransitions,
   zIndex: fluentZIndex,
+  breakpoints: fluentBreakpoints,
+  mediaQueries: fluentMediaQueries,
 }

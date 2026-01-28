@@ -722,6 +722,32 @@ export default function FluentAdminDashboard() {
       </Snackbar>
 
       <style>{`
+        /* 모바일 대응 (768px 이하) */
+        @media (max-width: 768px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .members-grid {
+            grid-template-columns: 1fr !important;
+          }
+          /* content 패딩 줄이기 */
+          div[style*="padding: 32px"] {
+            padding: 16px !important;
+          }
+          /* 제목 크기 조정 */
+          h1 {
+            font-size: 24px !important;
+          }
+          h2 {
+            font-size: 18px !important;
+          }
+          /* 통계 카드 텍스트 크기 조정 */
+          div[style*="font-size: 36px"] {
+            font-size: 28px !important;
+          }
+        }
+        
+        /* 태블릿 대응 (1200px 이하) */
         @media (max-width: 1200px) {
           .stats-grid {
             grid-template-columns: repeat(3, 1fr) !important;
@@ -730,12 +756,17 @@ export default function FluentAdminDashboard() {
             grid-template-columns: 1fr !important;
           }
         }
-        @media (max-width: 768px) {
+        
+        /* 작은 모바일 (480px 이하) */
+        @media (max-width: 480px) {
           .stats-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .members-grid {
             grid-template-columns: 1fr !important;
+          }
+          div[style*="padding: 32px"] {
+            padding: 12px !important;
+          }
+          h1 {
+            font-size: 20px !important;
           }
         }
       `}</style>

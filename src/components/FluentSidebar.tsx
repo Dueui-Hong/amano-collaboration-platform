@@ -3,10 +3,12 @@
  * - 관리자/팀원 모두 사용
  * - 업무 현황 / 업무 배정 / 자료 게시판
  * - Neumorphism Level 4
+ * - 완벽한 모바일 반응형 (햄버거 메뉴)
  */
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { fluentColors, fluentShadows, fluentRadius } from '@/styles/fluent';
 
@@ -15,6 +17,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import ArticleIcon from '@mui/icons-material/Article';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface SidebarProps {
   userRole: 'admin' | 'member';
@@ -25,6 +29,21 @@ interface SidebarProps {
 export default function FluentSidebar({ userRole, currentView = 0, onViewChange }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setMobileOpen(false); // 데스크톱에서는 항상 열려있음
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const isBoard = pathname === '/board';
   const isDashboard = pathname === '/dashboard';
@@ -32,6 +51,13 @@ export default function FluentSidebar({ userRole, currentView = 0, onViewChange 
 
   const handleNavigate = (path: string) => {
     router.push(path);
+    if (isMobile) {
+      setMobileOpen(false); // 모바일에서 페이지 이동 시 사이드바 닫기
+    }
+  };
+
+  const toggleMobile = () => {
+    setMobileOpen(!mobileOpen);
   };
 
   const menuItems = userRole === 'admin' ? [
@@ -44,59 +70,129 @@ export default function FluentSidebar({ userRole, currentView = 0, onViewChange 
   ];
 
   return (
-    <div style={styles.container}>
-      <div style={styles.menuList}>
-        {menuItems.map((item, index) => {
-          const Icon = item.icon;
-          const isActive = userRole === 'admin'
-            ? (item.path === '/board' ? isBoard : (isAdminDashboard && currentView === item.view))
-            : (item.path === pathname);
+    <>
+      {/* 모바일 햄버거 버튼 */}
+      {isMobile && (
+        <button
+          onClick={toggleMobile}
+          style={styles.mobileToggle as React.CSSProperties}
+          aria-label="메뉴 열기/닫기"
+        >
+          {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+        </button>
+      )}
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                if (item.path) {
-                  // 관리자가 게시판에서 대시보드로 이동하는 경우 뷰 저장
-                  if (userRole === 'admin' && item.path === '/admin/dashboard' && item.view !== undefined) {
-                    localStorage.setItem('adminDashboardView', String(item.view));
+      {/* 모바일 오버레이 */}
+      {isMobile && mobileOpen && (
+        <div
+          style={styles.overlay as React.CSSProperties}
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* 사이드바 */}
+      <div
+        style={{
+          ...styles.container,
+          ...(isMobile ? {
+            position: 'fixed',
+            transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+            transition: 'transform 0.3s ease',
+            zIndex: 1100,
+          } : {}),
+        } as React.CSSProperties}
+      >
+        <div style={styles.menuList as React.CSSProperties}>
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            const isActive = userRole === 'admin'
+              ? (item.path === '/board' ? isBoard : (isAdminDashboard && currentView === item.view))
+              : (item.path === pathname);
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (userRole === 'admin' && item.view !== undefined) {
+                    // 관리자의 업무 현황/배정 탭
+                    if (isAdminDashboard) {
+                      // 이미 관리자 대시보드에 있으면 뷰만 변경
+                      if (onViewChange) {
+                        onViewChange(item.view);
+                      }
+                      if (isMobile) {
+                        setMobileOpen(false); // 모바일에서 뷰 변경 시 사이드바 닫기
+                      }
+                    } else {
+                      // 다른 페이지에서 관리자 대시보드로 이동하는 경우 뷰 저장
+                      localStorage.setItem('adminDashboardView', String(item.view));
+                      handleNavigate('/admin/dashboard');
+                    }
+                  } else if (item.path) {
+                    // 자료 게시판 등 다른 페이지로 이동
+                    handleNavigate(item.path);
                   }
-                  handleNavigate(item.path);
-                } else if (onViewChange && item.view !== undefined) {
-                  // 현재 관리자 대시보드 내에서 뷰 변경
-                  onViewChange(item.view);
-                }
-              }}
-              style={{
-                ...styles.menuItem,
-                ...(isActive ? styles.menuItemActive : {}),
-                marginBottom: index < menuItems.length - 1 ? '12px' : '0', // 간격 줄임
-              }}
-            >
-              <div style={styles.iconContainer}>
-                <Icon style={styles.icon} />
-              </div>
-              <span style={styles.label}>{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
+                }}
+                style={{
+                  ...styles.menuItem,
+                  ...(isActive ? styles.menuItemActive : {}),
+                  marginBottom: index < menuItems.length - 1 ? '12px' : '0',
+                } as React.CSSProperties}
+              >
+                <div style={styles.iconContainer as React.CSSProperties}>
+                  <Icon style={styles.icon as React.CSSProperties} />
+                </div>
+                <span style={styles.label as React.CSSProperties}>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
+        <style>{`
+          @keyframes pulse {
+            0%, 100% {
+              transform: scale(1);
+            }
+            50% {
+              transform: scale(1.02);
+            }
           }
-          50% {
-            transform: scale(1.02); /* 크기 변화 줄임 */
-          }
-        }
-      `}</style>
-    </div>
+        `}</style>
+      </div>
+    </>
   );
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
+  mobileToggle: {
+    position: 'fixed',
+    top: '80px',
+    left: '16px',
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    background: `linear-gradient(135deg, ${fluentColors.primary[500]}, ${fluentColors.primary[700]})`,
+    border: 'none',
+    color: '#FFFFFF',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: fluentShadows.neumorph3,
+    zIndex: 1050,
+    transition: 'all 0.3s ease',
+  },
+
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 1090,
+  },
+
   container: {
     width: '240px',
     minHeight: '100vh',
@@ -113,19 +209,19 @@ const styles: { [key: string]: React.CSSProperties } = {
   menuList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px', // 간격 줄임
+    gap: '12px',
   },
 
   menuItem: {
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
-    padding: '16px 20px', // 패딩 줄임
+    padding: '16px 20px',
     background: fluentColors.neutral[0],
     border: `2px solid ${fluentColors.neutral[30]}`,
     borderRadius: fluentRadius.lg,
     cursor: 'pointer',
-    transition: 'all 0.2s ease', // 트랜지션 시간 줄임
+    transition: 'all 0.2s ease',
     boxShadow: fluentShadows.neumorph2,
     outline: 'none',
     fontSize: '15px',
