@@ -86,17 +86,17 @@ export default function FluentLoginPage() {
       </div>
 
       {/* Main Content */}
-      <div style={styles.content}>
+      <div className="content" style={styles.content}>
         {/* Left Section - Hero (Desktop only) */}
-        <div style={{...styles.leftSection, opacity: mounted ? 1 : 0}}>
+        <div className="left-section" style={{...styles.leftSection, opacity: mounted ? 1 : 0}}>
           <div style={styles.heroContent}>
             <div style={styles.logoContainer}>
               <BusinessIcon style={styles.logoIcon} />
               <AutoAwesomeIcon style={styles.sparkleIcon} />
             </div>
-            <h1 style={styles.heroTitle}>아마노코리아</h1>
-            <h2 style={styles.heroSubtitle}>업무 관리 시스템</h2>
-            <p style={styles.heroDescription}>
+            <h1 className="hero-title" style={styles.heroTitle}>아마노코리아</h1>
+            <h2 className="hero-subtitle" style={styles.heroSubtitle}>업무 관리 시스템</h2>
+            <p className="hero-description" style={styles.heroDescription}>
               효율적인 업무 흐름으로<br />
               팀의 생산성을 극대화하세요
             </p>
@@ -120,12 +120,12 @@ export default function FluentLoginPage() {
         </div>
 
         {/* Right Section - Login Card */}
-        <div style={{...styles.rightSection, opacity: mounted ? 1 : 0}}>
-          <div style={styles.loginCard}>
+        <div className="right-section" style={{...styles.rightSection, opacity: mounted ? 1 : 0}}>
+          <div className="login-card" style={styles.loginCard}>
             {/* Card Header */}
             <div style={styles.cardHeader}>
-              <h3 style={styles.cardTitle}>로그인</h3>
-              <p style={styles.cardSubtitle}>계정 정보를 입력해주세요</p>
+              <h3 className="card-title" style={styles.cardTitle}>로그인</h3>
+              <p className="card-subtitle" style={styles.cardSubtitle}>계정 정보를 입력해주세요</p>
             </div>
 
             {/* Error Alert */}
@@ -140,11 +140,12 @@ export default function FluentLoginPage() {
             <form onSubmit={handleLogin} style={styles.form}>
               {/* Email Input */}
               <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>이메일</label>
+                <label className="input-label" style={styles.inputLabel}>이메일</label>
                 <div style={styles.inputWrapper}>
-                  <EmailIcon style={styles.inputIcon} />
+                  <EmailIcon className="input-icon" style={styles.inputIcon} />
                   <input
                     type="email"
+                    className="input"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="example@amano.co.kr"
@@ -157,11 +158,12 @@ export default function FluentLoginPage() {
 
               {/* Password Input */}
               <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>비밀번호</label>
+                <label className="input-label" style={styles.inputLabel}>비밀번호</label>
                 <div style={styles.inputWrapper}>
-                  <LockIcon style={styles.inputIcon} />
+                  <LockIcon className="input-icon" style={styles.inputIcon} />
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    className="input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
@@ -194,6 +196,7 @@ export default function FluentLoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
+                className="submit-button"
                 disabled={loading}
                 style={{
                   ...styles.submitButton,
@@ -223,20 +226,22 @@ export default function FluentLoginPage() {
               <button
                 type="button"
                 onClick={() => quickLogin('minseok_kim1@amano.co.kr', '1111')}
+                className="quick-button"
                 style={styles.quickButton}
                 disabled={loading}
               >
-                <span style={styles.quickButtonIcon}>👨‍💼</span>
-                <span style={styles.quickButtonText}>관리자</span>
+                <span className="quick-button-icon" style={styles.quickButtonIcon}>👨‍💼</span>
+                <span className="quick-button-text" style={styles.quickButtonText}>관리자</span>
               </button>
               <button
                 type="button"
                 onClick={() => quickLogin('dueui_hong@amano.co.kr', '1111')}
+                className="quick-button"
                 style={styles.quickButton}
                 disabled={loading}
               >
-                <span style={styles.quickButtonIcon}>👤</span>
-                <span style={styles.quickButtonText}>팀원</span>
+                <span className="quick-button-icon" style={styles.quickButtonIcon}>👤</span>
+                <span className="quick-button-text" style={styles.quickButtonText}>팀원</span>
               </button>
             </div>
           </div>
@@ -310,16 +315,37 @@ export default function FluentLoginPage() {
         }
 
         /* Responsive Media Queries */
+        @media (max-width: 1200px) {
+          .content {
+            gap: 40px;
+          }
+          .hero-title {
+            font-size: 42px;
+          }
+          .hero-subtitle {
+            font-size: 24px;
+          }
+          .hero-description {
+            font-size: 16px;
+          }
+        }
+
         @media (max-width: 1024px) {
           /* Tablet */
           .left-section {
-            max-width: 400px !important;
+            max-width: 400px;
           }
           .hero-title {
-            font-size: 36px !important;
+            font-size: 36px;
           }
           .hero-subtitle {
-            font-size: 22px !important;
+            font-size: 20px;
+          }
+          .hero-description {
+            font-size: 15px;
+          }
+          .login-card {
+            padding: 40px 32px;
           }
         }
 
@@ -328,14 +354,63 @@ export default function FluentLoginPage() {
           .left-section {
             display: none !important;
           }
+          .content {
+            padding: 24px 16px;
+            gap: 0;
+          }
           .right-section {
-            max-width: 100% !important;
+            max-width: 100%;
           }
           .login-card {
-            padding: 32px 24px !important;
+            padding: 32px 24px;
+            border-radius: 20px;
           }
           .card-title {
-            font-size: 24px !important;
+            font-size: 24px;
+          }
+          .card-subtitle {
+            font-size: 13px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          /* Small Mobile */
+          .content {
+            padding: 16px 12px;
+          }
+          .login-card {
+            padding: 24px 20px;
+            border-radius: 16px;
+          }
+          .card-title {
+            font-size: 20px;
+          }
+          .card-subtitle {
+            font-size: 12px;
+          }
+          .input-label {
+            font-size: 12px;
+          }
+          .input {
+            padding: 14px 14px 14px 48px;
+            font-size: 14px;
+          }
+          .input-icon {
+            font-size: 18px;
+            left: 14px;
+          }
+          .submit-button {
+            padding: 16px;
+            font-size: 14px;
+          }
+          .quick-button {
+            padding: 14px;
+          }
+          .quick-button-icon {
+            font-size: 28px;
+          }
+          .quick-button-text {
+            font-size: 12px;
           }
         }
       `}</style>
@@ -405,13 +480,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
     padding: '40px 20px',
     gap: '60px',
-  },
+  } as React.CSSProperties,
+
+  '@media (max-width: 768px)': {
+    content: {
+      padding: '24px 16px',
+      gap: 0,
+    },
+  } as any,
 
   leftSection: {
     flex: '1 1 50%',
     maxWidth: '600px',
     transition: 'opacity 0.8s ease-out',
-  },
+  } as React.CSSProperties,
 
   heroContent: {
     color: '#FFFFFF',
@@ -500,7 +582,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '480px',
     width: '100%',
     transition: 'opacity 0.8s ease-out 0.2s',
-  },
+  } as React.CSSProperties,
 
   loginCard: {
     background: fluentColors.neutral[0],
@@ -508,7 +590,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '48px',
     boxShadow: fluentShadows.neumorph4,
     position: 'relative',
-  },
+  } as React.CSSProperties,
 
   cardHeader: {
     marginBottom: '32px',
@@ -521,12 +603,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: fluentColors.neutral[100],
     marginBottom: '8px',
     letterSpacing: '-0.5px',
-  },
+  } as React.CSSProperties,
 
   cardSubtitle: {
     fontSize: '15px',
     color: fluentColors.neutral[60],
-  },
+  } as React.CSSProperties,
 
   errorAlert: {
     display: 'flex',
@@ -567,7 +649,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 600,
     color: fluentColors.neutral[80],
     marginBottom: '4px',
-  },
+  } as React.CSSProperties,
 
   inputWrapper: {
     position: 'relative',
@@ -586,7 +668,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '20px',
     color: fluentColors.primary[500],
     pointerEvents: 'none',
-  },
+  } as React.CSSProperties,
 
   input: {
     flex: 1,
@@ -597,7 +679,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '15px',
     color: fluentColors.neutral[100],
     fontWeight: 500,
-  },
+  } as React.CSSProperties,
 
   passwordToggle: {
     border: 'none',
@@ -667,7 +749,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     boxShadow: fluentShadows.neumorph2,
     transition: 'all 0.3s ease',
     marginTop: '8px',
-  },
+  } as React.CSSProperties,
 
   submitButtonLoading: {
     opacity: 0.7,
@@ -727,15 +809,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     boxShadow: fluentShadows.neumorph1,
-  },
+  } as React.CSSProperties,
 
   quickButtonIcon: {
     fontSize: '32px',
-  },
+  } as React.CSSProperties,
 
   quickButtonText: {
     fontSize: '14px',
     fontWeight: 600,
     color: fluentColors.neutral[80],
-  },
+  } as React.CSSProperties,
 };

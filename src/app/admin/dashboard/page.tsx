@@ -563,7 +563,7 @@ export default function FluentAdminDashboard() {
               </div>
 
               <DragDropContext onDragEnd={onDragEnd}>
-              <div style={styles.assignGrid}>
+              <div className="assign-grid" style={styles.assignGrid}>
                 {/* Unassigned Column */}
                 <div style={styles.assignColumn}>
                   <div style={{...styles.assignHeader, background: `linear-gradient(135deg, ${fluentColors.error.light}, ${fluentColors.error.main})`}}>
@@ -693,7 +693,7 @@ export default function FluentAdminDashboard() {
           )}
 
           {/* Action Buttons */}
-          <div style={styles.actionButtons}>
+          <div className="action-buttons" style={styles.actionButtons}>
             <button onClick={fetchData} style={styles.primaryButton}>
               <RefreshIcon style={styles.buttonIcon} />
               <span>새로고침</span>
@@ -790,8 +790,24 @@ export default function FluentAdminDashboard() {
           /* 버튼 */
           button {
             font-size: 12px !important;
-            padding: 8px 12px !important;
-            min-height: 40px !important;
+            padding: 10px 16px !important;
+            min-height: 44px !important;
+            gap: 6px !important;
+          }
+          button span {
+            display: inline !important;
+          }
+          button svg {
+            font-size: 16px !important;
+          }
+          
+          /* 액션 버튼 그리드 */
+          .action-buttons {
+            flex-direction: column !important;
+            gap: 12px !important;
+          }
+          .action-buttons button {
+            width: 100% !important;
           }
           
           /* 드래그 앤 드롭 안내 */
