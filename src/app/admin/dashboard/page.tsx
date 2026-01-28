@@ -549,7 +549,20 @@ export default function FluentAdminDashboard() {
             </>
           ) : (
             /* 업무 배정 View */
-            <DragDropContext onDragEnd={onDragEnd}>
+            <>
+              {/* Drag & Drop 안내 카드 */}
+              <div style={styles.dragDropGuide}>
+                <div style={styles.guideIcon}>🖱️</div>
+                <div style={styles.guideContent}>
+                  <h3 style={styles.guideTitle}>드래그 앤 드롭으로 업무 배정하기</h3>
+                  <p style={styles.guideText}>
+                    미배정 업무 카드를 <strong>마우스로 드래그</strong>하여 팀원 칸에 <strong>드롭</strong>하세요. 
+                    배정된 업무는 다시 드래그하여 다른 팀원에게 재배정하거나 미배정 칸으로 되돌릴 수 있습니다.
+                  </p>
+                </div>
+              </div>
+
+              <DragDropContext onDragEnd={onDragEnd}>
               <div style={styles.assignGrid}>
                 {/* Unassigned Column */}
                 <div style={styles.assignColumn}>
@@ -676,6 +689,7 @@ export default function FluentAdminDashboard() {
                 })}
               </div>
             </DragDropContext>
+            </>
           )}
 
           {/* Action Buttons */}
@@ -722,51 +736,142 @@ export default function FluentAdminDashboard() {
       </Snackbar>
 
       <style>{`
-        /* 모바일 대응 (768px 이하) */
-        @media (max-width: 768px) {
+        /* 작은 모바일 (360-480px) - 세로 모드 */
+        @media (max-width: 480px) {
+          /* 전체 레이아웃 */
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .members-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .assign-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          /* 패딩 최소화 */
+          div[style*="padding: 32px"] {
+            padding: 12px !important;
+          }
+          div[style*="padding: 24px"] {
+            padding: 12px !important;
+          }
+          div[style*="padding: 20px"] {
+            padding: 10px !important;
+          }
+          
+          /* 제목 및 텍스트 크기 */
+          h1 {
+            font-size: 18px !important;
+            line-height: 1.3 !important;
+            word-break: keep-all !important;
+          }
+          h2 {
+            font-size: 16px !important;
+            line-height: 1.3 !important;
+          }
+          h3 {
+            font-size: 14px !important;
+          }
+          p {
+            font-size: 13px !important;
+            line-height: 1.5 !important;
+          }
+          
+          /* 통계 카드 */
+          div[style*="font-size: 36px"] {
+            font-size: 24px !important;
+          }
+          div[style*="font-size: 28px"] {
+            font-size: 20px !important;
+          }
+          
+          /* 버튼 */
+          button {
+            font-size: 12px !important;
+            padding: 8px 12px !important;
+            min-height: 40px !important;
+          }
+          
+          /* 드래그 앤 드롭 안내 */
+          div[style*="dragDropGuide"] {
+            flex-direction: column !important;
+            text-align: center !important;
+            padding: 16px !important;
+          }
+          
+          /* 업무 카드 */
+          div[style*="taskDragCard"] {
+            padding: 10px !important;
+          }
+        }
+        
+        /* 모바일 (481-768px) */
+        @media (min-width: 481px) and (max-width: 768px) {
           .stats-grid {
             grid-template-columns: repeat(2, 1fr) !important;
           }
           .members-grid {
             grid-template-columns: 1fr !important;
           }
-          /* content 패딩 줄이기 */
+          .assign-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
           div[style*="padding: 32px"] {
             padding: 16px !important;
           }
-          /* 제목 크기 조정 */
+          
           h1 {
-            font-size: 24px !important;
+            font-size: 22px !important;
           }
           h2 {
             font-size: 18px !important;
           }
-          /* 통계 카드 텍스트 크기 조정 */
+          
           div[style*="font-size: 36px"] {
             font-size: 28px !important;
           }
+          
+          button {
+            font-size: 13px !important;
+            padding: 10px 16px !important;
+          }
         }
         
-        /* 태블릿 대응 (1200px 이하) */
-        @media (max-width: 1200px) {
+        /* 태블릿 (769-1024px) */
+        @media (min-width: 769px) and (max-width: 1024px) {
           .stats-grid {
             grid-template-columns: repeat(3, 1fr) !important;
           }
           .assign-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: repeat(2, 1fr) !important;
           }
         }
         
-        /* 작은 모바일 (480px 이하) */
-        @media (max-width: 480px) {
+        /* 대형 태블릿 (1025-1200px) */
+        @media (min-width: 1025px) and (max-width: 1200px) {
           .stats-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .assign-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+        
+        /* 세로 모드 전용 */
+        @media (orientation: portrait) and (max-width: 768px) {
+          .stats-grid,
+          .members-grid,
+          .assign-grid {
             grid-template-columns: 1fr !important;
           }
-          div[style*="padding: 32px"] {
-            padding: 12px !important;
-          }
-          h1 {
-            font-size: 20px !important;
+          
+          /* 액션 버튼 세로 정렬 */
+          div[style*="display: flex"][style*="gap: 16px"] {
+            flex-direction: column !important;
+            align-items: stretch !important;
           }
         }
       `}</style>
@@ -1042,6 +1147,42 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   urgencyBadgeDefault: {
     background: fluentColors.neutral[60],
+  },
+
+  dragDropGuide: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+    padding: '24px',
+    marginBottom: '24px',
+    background: `linear-gradient(135deg, ${fluentColors.primary[50]}, ${fluentColors.primary[100]})`,
+    borderRadius: fluentRadius.xl,
+    border: `2px solid ${fluentColors.primary[300]}`,
+    boxShadow: fluentShadows.neumorph3,
+  },
+
+  guideIcon: {
+    fontSize: '48px',
+    flexShrink: 0,
+  },
+
+  guideContent: {
+    flex: 1,
+  },
+
+  guideTitle: {
+    fontSize: '18px',
+    fontWeight: 700,
+    color: fluentColors.primary[900],
+    marginBottom: '8px',
+    margin: 0,
+  },
+
+  guideText: {
+    fontSize: '14px',
+    color: fluentColors.primary[800],
+    lineHeight: '1.6',
+    margin: 0,
   },
 
   assignGrid: {

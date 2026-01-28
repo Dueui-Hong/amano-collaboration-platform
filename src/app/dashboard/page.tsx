@@ -550,43 +550,114 @@ export default function FluentDashboard() {
       </Snackbar>
 
       <style>{`
-        /* 태블릿 대응 (1200px 이하) */
-        @media (max-width: 1200px) {
+        /* 작은 모바일 (360-480px) - 세로 모드 */
+        @media (max-width: 480px) {
+          /* 그리드 1열로 */
+          .stats-grid,
           .tasks-grid {
             grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          
+          /* 헤더 액션 */
+          .header-actions {
+            flex-direction: column !important;
+            width: 100% !important;
+            gap: 8px !important;
+          }
+          
+          /* 패딩 최소화 */
+          div[style*="padding: 32px 24px"] {
+            padding: 12px 8px !important;
+          }
+          div[style*="padding: 24px"] {
+            padding: 12px !important;
+          }
+          div[style*="padding: 20px"] {
+            padding: 10px !important;
+          }
+          div[style*="padding: 16px"] {
+            padding: 8px !important;
+          }
+          
+          /* 제목 크기 */
+          h1 {
+            font-size: 18px !important;
+            line-height: 1.3 !important;
+          }
+          h2 {
+            font-size: 16px !important;
+          }
+          h3 {
+            font-size: 14px !important;
+          }
+          
+          /* 버튼 */
+          button {
+            font-size: 12px !important;
+            padding: 8px 12px !important;
+            min-height: 40px !important;
+            width: 100% !important;
+          }
+          
+          /* 통계 카드 */
+          div[style*="font-size: 40px"] {
+            font-size: 28px !important;
+          }
+          
+          /* 칸반 카드 */
+          div[style*="taskCard"] {
+            padding: 10px !important;
           }
         }
         
-        /* 모바일 대응 (768px 이하) */
-        @media (max-width: 768px) {
+        /* 모바일 (481-768px) */
+        @media (min-width: 481px) and (max-width: 768px) {
           .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .tasks-grid {
             grid-template-columns: 1fr !important;
           }
           .header-actions {
             flex-direction: column !important;
             width: 100% !important;
           }
-          /* content 패딩 줄이기 */
+          
           div[style*="padding: 32px 24px"] {
             padding: 16px 12px !important;
           }
-          /* 제목 크기 조정 */
+          
           h1 {
-            font-size: 24px !important;
+            font-size: 22px !important;
           }
-        }
-        
-        /* 작은 모바일 (480px 이하) */
-        @media (max-width: 480px) {
-          div[style*="padding: 32px 24px"] {
-            padding: 12px 8px !important;
-          }
-          h1 {
-            font-size: 20px !important;
-          }
+          
           button {
             font-size: 13px !important;
             padding: 10px 16px !important;
+          }
+        }
+        
+        /* 태블릿 (769-1200px) */
+        @media (min-width: 769px) and (max-width: 1200px) {
+          .tasks-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        
+        /* 세로 모드 전용 */
+        @media (orientation: portrait) and (max-width: 768px) {
+          .stats-grid,
+          .tasks-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          /* FAB 위치 조정 */
+          button[aria-label*="주간보고서"] {
+            bottom: 80px !important;
+            right: 16px !important;
+            width: 56px !important;
+            height: 56px !important;
           }
         }
       `}</style>
