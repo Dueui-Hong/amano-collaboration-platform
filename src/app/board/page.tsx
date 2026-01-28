@@ -255,11 +255,16 @@ export default function BoardPage() {
   }
 
   return (
-    <>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f0f7 50%, #d5e5f2 100%)',
+      }}
+    >
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: colors.text.primary }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 10, sm: 3, md: 4 }, px: { xs: 2, md: 3 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 2, md: 3 }, flexWrap: 'wrap', gap: { xs: 1.5, md: 2 } }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: colors.text.primary, fontSize: { xs: '1.25rem', md: '2.125rem' } }}>
             📁 자료 게시판
           </Typography>
           <Button
@@ -269,16 +274,18 @@ export default function BoardPage() {
             sx={{
               bgcolor: colors.primary.main,
               '&:hover': { bgcolor: colors.primary.dark },
+              fontSize: { xs: '0.875rem', md: '1rem' },
+              px: { xs: 2, md: 3 },
             }}
           >
             글쓰기
           </Button>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 2 } }}>
           {posts.length === 0 ? (
-            <Card sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">게시글이 없습니다.</Typography>
+            <Card sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
+              <Typography color="text.secondary" sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }}>게시글이 없습니다.</Typography>
             </Card>
           ) : (
             posts.map(post => (
@@ -292,13 +299,13 @@ export default function BoardPage() {
                   },
                 }}
               >
-                <CardContent>
+                <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, fontSize: { xs: '1rem', md: '1.25rem' } }}>
                         {post.title}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', md: '1rem' } }}>
                         {post.content}
                       </Typography>
                       
@@ -306,10 +313,14 @@ export default function BoardPage() {
                       {post.attachments && post.attachments.length > 0 && (
                         <Box sx={{ mb: 2 }}>
                           <Chip
-                            icon={<AttachFileIcon />}
+                            icon={<AttachFileIcon sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }} />}
                             label={`첨부파일 ${post.attachments.length}개`}
                             size="small"
-                            sx={{ bgcolor: colors.secondary.light, color: colors.secondary.dark }}
+                            sx={{ 
+                              bgcolor: colors.secondary.light, 
+                              color: colors.secondary.dark,
+                              fontSize: { xs: '0.75rem', md: '0.813rem' },
+                            }}
                           />
                           <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                             {post.attachments.map((url, index) => (
@@ -324,6 +335,7 @@ export default function BoardPage() {
                                   color: colors.primary.main,
                                   textDecoration: 'none',
                                   '&:hover': { textDecoration: 'underline' },
+                                  fontSize: { xs: '0.75rem', md: '0.875rem' },
                                 }}
                               >
                                 📎 {url.split('/').pop()}
@@ -337,15 +349,19 @@ export default function BoardPage() {
                         <Chip
                           label={post.author_name}
                           size="small"
-                          sx={{ bgcolor: colors.gray[100] }}
+                          sx={{ 
+                            bgcolor: colors.gray[100],
+                            fontSize: { xs: '0.75rem', md: '0.813rem' },
+                          }}
                         />
                         <Chip
-                          icon={<VisibilityIcon />}
+                          icon={<VisibilityIcon sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }} />}
                           label={`조회 ${post.views}`}
                           size="small"
                           variant="outlined"
+                          sx={{ fontSize: { xs: '0.75rem', md: '0.813rem' } }}
                         />
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
                           {new Date(post.created_at).toLocaleDateString('ko-KR')}
                         </Typography>
                       </Box>
@@ -377,24 +393,36 @@ export default function BoardPage() {
       </Container>
 
       {/* 글쓰기/수정 다이얼로그 */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{editingPost ? '게시글 수정' : '새 게시글 작성'}</DialogTitle>
+      <Dialog 
+        open={dialogOpen} 
+        onClose={handleCloseDialog} 
+        maxWidth="md" 
+        fullWidth
+        fullScreen={{ xs: true, sm: false } as any}
+      >
+        <DialogTitle sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+          {editingPost ? '게시글 수정' : '새 게시글 작성'}
+        </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 2 }, mt: { xs: 1, md: 2 } }}>
             <TextField
               label="제목"
               fullWidth
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
+              InputProps={{ sx: { fontSize: { xs: '0.875rem', md: '1rem' } } }}
+              InputLabelProps={{ sx: { fontSize: { xs: '0.875rem', md: '1rem' } } }}
             />
             <TextField
               label="내용"
               fullWidth
               multiline
-              rows={6}
+              rows={{ xs: 4, md: 6 } as any}
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              InputProps={{ sx: { fontSize: { xs: '0.875rem', md: '1rem' } } }}
+              InputLabelProps={{ sx: { fontSize: { xs: '0.875rem', md: '1rem' } } }}
             />
             
             {/* 파일 첨부 */}
@@ -413,7 +441,12 @@ export default function BoardPage() {
                   component="span"
                   startIcon={<AttachFileIcon />}
                   disabled={uploadingFile}
-                  sx={{ borderColor: colors.secondary.main, color: colors.secondary.main }}
+                  size={window.innerWidth < 600 ? 'small' : 'medium'}
+                  sx={{ 
+                    borderColor: colors.secondary.main, 
+                    color: colors.secondary.main,
+                    fontSize: { xs: '0.875rem', md: '1rem' },
+                  }}
                 >
                   {uploadingFile ? '업로드 중...' : '파일 첨부'}
                 </Button>
@@ -422,7 +455,7 @@ export default function BoardPage() {
               {/* 첨부된 파일 목록 */}
               {attachments.length > 0 && (
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
                     첨부 파일 ({attachments.length}개)
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -433,12 +466,12 @@ export default function BoardPage() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          p: 1,
+                          p: { xs: 0.75, md: 1 },
                           bgcolor: colors.gray[50],
                           borderRadius: 1,
                         }}
                       >
-                        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: { xs: '0.813rem', md: '0.875rem' } }}>
                           {url.split('/').pop()}
                         </Typography>
                         <IconButton
@@ -456,8 +489,8 @@ export default function BoardPage() {
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>취소</Button>
+        <DialogActions sx={{ p: { xs: 2, md: 3 } }}>
+          <Button onClick={handleCloseDialog} sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }}>취소</Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
@@ -465,12 +498,13 @@ export default function BoardPage() {
             sx={{
               bgcolor: colors.primary.main,
               '&:hover': { bgcolor: colors.primary.dark },
+              fontSize: { xs: '0.875rem', md: '1rem' },
             }}
           >
             {editingPost ? '수정' : '작성'}
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Box>
   );
 }
