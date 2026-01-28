@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { fluentColors, fluentShadows, fluentRadius } from '@/styles/fluent';
 import Header from '@/components/Header';
+import FluentSidebar from '@/components/FluentSidebar';
 
 // Material-UI
 import CircularProgress from '@mui/material/CircularProgress';
@@ -270,14 +271,18 @@ export default function FluentBoardPage() {
     <div style={styles.container}>
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
       
-      <div style={styles.content}>
-        {/* Page Header */}
-        <div style={styles.pageHeader}>
-          <div style={styles.headerLeft}>
-            <h1 style={styles.pageTitle}>📁 자료 게시판</h1>
-            <p style={styles.pageSubtitle}>팀원들과 자료를 공유하세요</p>
+      <div style={styles.mainLayout}>
+        {/* Fluent Sidebar */}
+        <FluentSidebar userRole={userInfo.role} />
+
+        <div style={styles.content}>
+          {/* Page Header */}
+          <div style={styles.pageHeader}>
+            <div style={styles.headerLeft}>
+              <h1 style={styles.pageTitle}>📁 자료 게시판</h1>
+              <p style={styles.pageSubtitle}>팀원들과 자료를 공유하세요</p>
+            </div>
           </div>
-        </div>
 
         {/* Action Bar */}
         <div style={styles.actionBar}>
@@ -505,6 +510,7 @@ export default function FluentBoardPage() {
           }
         }
       `}</style>
+      </div>
     </div>
   );
 }
@@ -516,10 +522,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   },
 
+  mainLayout: {
+    display: 'flex',
+  },
+
   content: {
-    maxWidth: '1400px',
+    flex: 1,
+    padding: '32px',
+    maxWidth: '1600px',
     margin: '0 auto',
-    padding: '32px 24px',
   },
 
   pageHeader: {

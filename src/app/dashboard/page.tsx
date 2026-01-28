@@ -17,6 +17,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { supabase, Task, Profile } from '@/lib/supabase';
 import { fluentColors, fluentShadows, fluentRadius } from '@/styles/fluent';
 import Header from '@/components/Header';
+import FluentSidebar from '@/components/FluentSidebar';
 
 // Icons
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -250,13 +251,6 @@ export default function FluentDashboard() {
             >
               <AddIcon style={styles.buttonIcon} />
               <span>새 업무 등록</span>
-            </button>
-            <button
-              onClick={() => router.push('/board')}
-              style={styles.secondaryButton}
-            >
-              <ArticleIcon style={styles.buttonIcon} />
-              <span>자료 게시판</span>
             </button>
           </div>
         </div>
