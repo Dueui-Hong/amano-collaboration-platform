@@ -1,7 +1,10 @@
 /**
- * 자료 게시판 페이지
- * - 팀원 모두가 글 작성 및 자료 공유 가능
- * - 첨부파일 업로드 지원
+ * 자료 게시판 - Microsoft Fluent Design 2.0
+ * - Neumorphism Level 4 (강한 입체감)
+ * - Glassmorphism Level 2 (미세한 투명도)
+ * - Animation Level 3 (적당한 애니메이션)
+ * - Blue color scheme (시인성 최적화)
+ * - 완벽한 반응형 디자인
  */
 
 'use client';
@@ -9,24 +12,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { fluentColors, fluentShadows, fluentRadius } from '@/styles/fluent';
 import Header from '@/components/Header';
-import colors from '@/styles/colors';
 
 // Material-UI
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
+import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
+import Box from '@mui/material/Box';
 
 // Icons
 import AddIcon from '@mui/icons-material/Add';
@@ -34,6 +31,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import SearchIcon from '@mui/icons-material/Search';
+import PersonIcon from '@mui/icons-material/Person';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
 interface BoardPost {
   id: string;
@@ -54,9 +54,10 @@ interface Profile {
   role: 'admin' | 'member';
 }
 
-export default function BoardPage() {
+export default function FluentBoardPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<BoardPost[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<BoardPost[]>([]);
   const [userInfo, setUserInfo] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -67,10 +68,24 @@ export default function BoardPage() {
   });
   const [uploadingFile, setUploadingFile] = useState(false);
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredPosts(posts);
+    } else {
+      const filtered = posts.filter(post => 
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.author_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredPosts(filtered);
+    }
+  }, [searchQuery, posts]);
 
   const fetchData = async () => {
     try {
@@ -97,6 +112,7 @@ export default function BoardPage() {
 
       if (error) throw error;
       setPosts(postsData || []);
+      setFilteredPosts(postsData || []);
     } catch (error) {
       console.error('데이터 로딩 실패:', error);
     } finally {
@@ -172,7 +188,6 @@ export default function BoardPage() {
     if (!userInfo || !formData.title.trim()) return;
 
     try {
-      // Supabase auth user 가져오기
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert('로그인이 필요합니다.');
@@ -180,7 +195,6 @@ export default function BoardPage() {
       }
 
       if (editingPost) {
-        // 수정
         const { error } = await supabase
           .from('board_posts')
           .update({
@@ -196,14 +210,13 @@ export default function BoardPage() {
         }
         alert('게시글이 수정되었습니다.');
       } else {
-        // 새 글 작성 - RLS 정책을 위해 author_id를 auth.uid()와 동일하게
         const { data, error } = await supabase
           .from('board_posts')
           .insert([
             {
               title: formData.title,
               content: formData.content || '',
-              author_id: user.id, // auth.uid()와 매칭
+              author_id: user.id,
               author_name: userInfo.name,
               views: 0,
               attachments: attachments,
@@ -216,7 +229,6 @@ export default function BoardPage() {
           alert(`게시글 작성 실패: ${error.message}`);
           throw error;
         }
-        console.log('작성 성공:', data);
         alert('게시글이 작성되었습니다.');
       }
 
@@ -255,137 +267,133 @@ export default function BoardPage() {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f0f7 50%, #d5e5f2 100%)',
-      }}
-    >
+    <div style={styles.container}>
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
-      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 2, md: 3 }, flexWrap: 'wrap', gap: 2 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: colors.text.primary, fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
-            📁 자료 게시판
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{
-              bgcolor: colors.primary.main,
-              '&:hover': { bgcolor: colors.primary.dark },
-              fontSize: { xs: '0.875rem', md: '1rem' },
-              px: { xs: 2, md: 3 },
-            }}
-          >
-            글쓰기
-          </Button>
-        </Box>
+      
+      <div style={styles.content}>
+        {/* Page Header */}
+        <div style={styles.pageHeader}>
+          <div style={styles.headerLeft}>
+            <h1 style={styles.pageTitle}>📁 자료 게시판</h1>
+            <p style={styles.pageSubtitle}>팀원들과 자료를 공유하세요</p>
+          </div>
+        </div>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 2 } }}>
-          {posts.length === 0 ? (
-            <Card sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">게시글이 없습니다.</Typography>
-            </Card>
+        {/* Action Bar */}
+        <div style={styles.actionBar}>
+          <div style={styles.searchBox}>
+            <SearchIcon style={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="제목, 내용, 작성자로 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={styles.searchInput}
+            />
+          </div>
+          <button
+            onClick={() => handleOpenDialog()}
+            style={styles.createButton}
+          >
+            <AddIcon style={styles.buttonIcon} />
+            <span>글쓰기</span>
+          </button>
+        </div>
+
+        {/* Posts Grid */}
+        <div style={styles.postsGrid}>
+          {filteredPosts.length === 0 ? (
+            <div style={styles.emptyState}>
+              <div style={styles.emptyIcon}>📝</div>
+              <div style={styles.emptyTitle}>게시글이 없습니다</div>
+              <div style={styles.emptySubtitle}>
+                {searchQuery ? '검색 결과가 없습니다' : '첫 게시글을 작성해보세요'}
+              </div>
+            </div>
           ) : (
-            posts.map(post => (
-              <Card
-                key={post.id}
-                sx={{
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    boxShadow: 4,
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                        {post.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', md: '1rem' } }}>
-                        {post.content}
-                      </Typography>
-                      
-                      {/* 첨부 파일 */}
-                      {post.attachments && post.attachments.length > 0 && (
-                        <Box sx={{ mb: 2 }}>
-                          <Chip
-                            icon={<AttachFileIcon />}
-                            label={`첨부파일 ${post.attachments.length}개`}
-                            size="small"
-                            sx={{ bgcolor: colors.secondary.light, color: colors.secondary.dark }}
-                          />
-                          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            {post.attachments.map((url, index) => (
-                              <Typography
-                                key={index}
-                                variant="caption"
-                                component="a"
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                sx={{
-                                  color: colors.primary.main,
-                                  textDecoration: 'none',
-                                  '&:hover': { textDecoration: 'underline' },
-                                }}
-                              >
-                                📎 {url.split('/').pop()}
-                              </Typography>
-                            ))}
-                          </Box>
-                        </Box>
-                      )}
-                      
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <Chip
-                          label={post.author_name}
-                          size="small"
-                          sx={{ bgcolor: colors.gray[100] }}
-                        />
-                        <Chip
-                          icon={<VisibilityIcon />}
-                          label={`조회 ${post.views}`}
-                          size="small"
-                          variant="outlined"
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(post.created_at).toLocaleDateString('ko-KR')}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    {(userInfo.id === post.author_id || userInfo.role === 'admin') && (
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(post)}
-                          sx={{ color: colors.primary.main }}
+            filteredPosts.map(post => (
+              <div key={post.id} style={styles.postCard}>
+                {/* Card Header */}
+                <div style={styles.postHeader}>
+                  <div style={styles.postMeta}>
+                    <div style={styles.authorBadge}>
+                      <PersonIcon style={styles.metaIcon} />
+                      <span>{post.author_name}</span>
+                    </div>
+                    <div style={styles.dateBadge}>
+                      <CalendarTodayIcon style={styles.metaIcon} />
+                      <span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
+                    </div>
+                  </div>
+                  {(userInfo.id === post.author_id || userInfo.role === 'admin') && (
+                    <div style={styles.postActions}>
+                      <button
+                        onClick={() => handleOpenDialog(post)}
+                        style={styles.actionButton}
+                        title="수정"
+                      >
+                        <EditIcon style={{fontSize: 16}} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(post.id)}
+                        style={{...styles.actionButton, color: fluentColors.error.main}}
+                        title="삭제"
+                      >
+                        <DeleteIcon style={{fontSize: 16}} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Content */}
+                <div style={styles.postContent}>
+                  <h3 style={styles.postTitle}>{post.title}</h3>
+                  <p style={styles.postDescription}>
+                    {post.content || '내용 없음'}
+                  </p>
+                </div>
+
+                {/* Attachments */}
+                {post.attachments && post.attachments.length > 0 && (
+                  <div style={styles.attachmentsSection}>
+                    <div style={styles.attachmentBadge}>
+                      <AttachFileIcon style={styles.attachmentIcon} />
+                      <span>{post.attachments.length}개의 첨부파일</span>
+                    </div>
+                    <div style={styles.attachmentList}>
+                      {post.attachments.map((url, index) => (
+                        <a
+                          key={index}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={styles.attachmentLink}
                         >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(post.id)}
-                          sx={{ color: colors.alert.error }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
+                          📎 {url.split('/').pop()}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Card Footer */}
+                <div style={styles.postFooter}>
+                  <div style={styles.viewsBadge}>
+                    <VisibilityIcon style={styles.footerIcon} />
+                    <span>조회 {post.views}</span>
+                  </div>
+                </div>
+              </div>
             ))
           )}
-        </Box>
-      </Container>
+        </div>
+      </div>
 
-      {/* 글쓰기/수정 다이얼로그 */}
+      {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{editingPost ? '게시글 수정' : '새 게시글 작성'}</DialogTitle>
+        <DialogTitle>
+          <div style={styles.modalTitle}>{editingPost ? '게시글 수정' : '새 게시글 작성'}</div>
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             <TextField
@@ -394,17 +402,19 @@ export default function BoardPage() {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
+              placeholder="게시글 제목을 입력하세요"
             />
             <TextField
               label="내용"
               fullWidth
               multiline
-              rows={6}
+              rows={8}
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              placeholder="게시글 내용을 입력하세요"
             />
             
-            {/* 파일 첨부 */}
+            {/* File Attachments */}
             <Box>
               <input
                 accept="*/*"
@@ -420,19 +430,15 @@ export default function BoardPage() {
                   component="span"
                   startIcon={<AttachFileIcon />}
                   disabled={uploadingFile}
-                  sx={{ borderColor: colors.secondary.main, color: colors.secondary.main }}
                 >
                   {uploadingFile ? '업로드 중...' : '파일 첨부'}
                 </Button>
               </label>
               
-              {/* 첨부된 파일 목록 */}
               {attachments.length > 0 && (
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                    첨부 파일 ({attachments.length}개)
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <div style={styles.modalSubtitle}>첨부 파일 ({attachments.length}개)</div>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
                     {attachments.map((url, index) => (
                       <Box
                         key={index}
@@ -440,21 +446,27 @@ export default function BoardPage() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          p: 1,
-                          bgcolor: colors.gray[50],
+                          p: 1.5,
+                          bgcolor: fluentColors.neutral[10],
                           borderRadius: 1,
+                          border: `1px solid ${fluentColors.neutral[30]}`,
                         }}
                       >
-                        <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {url.split('/').pop()}
-                        </Typography>
-                        <IconButton
-                          size="small"
+                        <span style={{fontSize: '14px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                          📎 {url.split('/').pop()}
+                        </span>
+                        <button
                           onClick={() => handleRemoveAttachment(url)}
-                          sx={{ color: colors.alert.error }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: fluentColors.error.main,
+                            padding: '4px 8px',
+                          }}
                         >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                          <DeleteIcon style={{fontSize: 18}} />
+                        </button>
                       </Box>
                     ))}
                   </Box>
@@ -463,21 +475,314 @@ export default function BoardPage() {
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, py: 2 }}>
           <Button onClick={handleCloseDialog}>취소</Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
             disabled={!formData.title.trim()}
-            sx={{
-              bgcolor: colors.primary.main,
-              '&:hover': { bgcolor: colors.primary.dark },
-            }}
           >
             {editingPost ? '수정' : '작성'}
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+
+      <style>{`
+        @media (max-width: 1200px) {
+          .posts-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .posts-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .action-bar {
+            flex-direction: column !important;
+          }
+          .search-box {
+            width: 100% !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
+
+const styles: { [key: string]: React.CSSProperties } = {
+  container: {
+    minHeight: '100vh',
+    background: `linear-gradient(135deg, ${fluentColors.neutral[10]} 0%, ${fluentColors.neutral[20]} 100%)`,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  },
+
+  content: {
+    maxWidth: '1400px',
+    margin: '0 auto',
+    padding: '32px 24px',
+  },
+
+  pageHeader: {
+    marginBottom: '32px',
+  },
+
+  headerLeft: {},
+
+  pageTitle: {
+    fontSize: '32px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    marginBottom: '8px',
+    letterSpacing: '-0.5px',
+  },
+
+  pageSubtitle: {
+    fontSize: '16px',
+    color: fluentColors.neutral[60],
+  },
+
+  actionBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px',
+    marginBottom: '32px',
+  },
+
+  searchBox: {
+    flex: 1,
+    maxWidth: '500px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    background: fluentColors.neutral[0],
+    borderRadius: fluentRadius.lg,
+    boxShadow: fluentShadows.neumorph2,
+    border: `2px solid ${fluentColors.neutral[30]}`,
+  },
+
+  searchIcon: {
+    fontSize: '22px',
+    color: fluentColors.neutral[60],
+  },
+
+  searchInput: {
+    flex: 1,
+    border: 'none',
+    outline: 'none',
+    background: 'transparent',
+    fontSize: '15px',
+    color: fluentColors.neutral[100],
+    fontWeight: 500,
+  },
+
+  createButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: `linear-gradient(135deg, ${fluentColors.primary[500]}, ${fluentColors.primary[700]})`,
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: fluentRadius.md,
+    fontSize: '15px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: fluentShadows.neumorph2,
+    transition: 'all 0.3s ease',
+  },
+
+  buttonIcon: {
+    fontSize: '20px',
+  },
+
+  postsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '24px',
+  },
+
+  postCard: {
+    background: fluentColors.neutral[0],
+    borderRadius: fluentRadius.xl,
+    padding: '24px',
+    boxShadow: fluentShadows.neumorph3,
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+
+  postHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingBottom: '16px',
+    borderBottom: `1px solid ${fluentColors.neutral[30]}`,
+  },
+
+  postMeta: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+
+  authorBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '4px 12px',
+    background: fluentColors.primary[50],
+    borderRadius: fluentRadius.sm,
+    fontSize: '12px',
+    fontWeight: 600,
+    color: fluentColors.primary[700],
+  },
+
+  dateBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '12px',
+    color: fluentColors.neutral[60],
+  },
+
+  metaIcon: {
+    fontSize: '14px',
+  },
+
+  postActions: {
+    display: 'flex',
+    gap: '4px',
+  },
+
+  actionButton: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '8px',
+    borderRadius: fluentRadius.sm,
+    color: fluentColors.primary[600],
+    transition: 'all 0.2s ease',
+  },
+
+  postContent: {
+    flex: 1,
+  },
+
+  postTitle: {
+    fontSize: '18px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    marginBottom: '12px',
+    lineHeight: 1.4,
+  },
+
+  postDescription: {
+    fontSize: '14px',
+    color: fluentColors.neutral[70],
+    lineHeight: 1.6,
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  },
+
+  attachmentsSection: {
+    padding: '12px',
+    background: fluentColors.neutral[10],
+    borderRadius: fluentRadius.md,
+    border: `1px solid ${fluentColors.neutral[30]}`,
+  },
+
+  attachmentBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: fluentColors.neutral[80],
+    marginBottom: '8px',
+  },
+
+  attachmentIcon: {
+    fontSize: '16px',
+  },
+
+  attachmentList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+
+  attachmentLink: {
+    fontSize: '12px',
+    color: fluentColors.primary[600],
+    textDecoration: 'none',
+    transition: 'all 0.2s ease',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+
+  postFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: '16px',
+    borderTop: `1px solid ${fluentColors.neutral[30]}`,
+  },
+
+  viewsBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '12px',
+    color: fluentColors.neutral[60],
+    fontWeight: 500,
+  },
+
+  footerIcon: {
+    fontSize: '16px',
+  },
+
+  emptyState: {
+    gridColumn: '1 / -1',
+    textAlign: 'center',
+    padding: '80px 24px',
+    background: fluentColors.neutral[0],
+    borderRadius: fluentRadius.xl,
+    boxShadow: fluentShadows.neumorph2,
+  },
+
+  emptyIcon: {
+    fontSize: '64px',
+    marginBottom: '16px',
+  },
+
+  emptyTitle: {
+    fontSize: '20px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    marginBottom: '8px',
+  },
+
+  emptySubtitle: {
+    fontSize: '14px',
+    color: fluentColors.neutral[60],
+  },
+
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+  },
+
+  modalSubtitle: {
+    fontSize: '13px',
+    color: fluentColors.neutral[60],
+    fontWeight: 600,
+  },
+};

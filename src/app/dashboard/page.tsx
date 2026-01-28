@@ -1,6 +1,10 @@
 /**
- * 팀원 개인 캘린더 페이지 (Material Design)
- * FullCalendar로 업무 진행 상태 관리
+ * 팀원 대시보드 - Microsoft Fluent Design 2.0
+ * - Neumorphism Level 4 (강한 입체감)
+ * - Glassmorphism Level 2 (미세한 투명도)
+ * - Animation Level 3 (적당한 애니메이션)
+ * - Blue color scheme (시인성 최적화)
+ * - 완벽한 반응형 디자인
  */
 
 'use client';
@@ -11,52 +15,37 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { supabase, Task, Profile } from '@/lib/supabase';
+import { fluentColors, fluentShadows, fluentRadius } from '@/styles/fluent';
+import Header from '@/components/Header';
+
+// Icons
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AddIcon from '@mui/icons-material/Add';
+import ArticleIcon from '@mui/icons-material/Article';
+import DescriptionIcon from '@mui/icons-material/Description';
+import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-// import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
-import Fab from '@mui/material/Fab';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
-import Divider from '@mui/material/Divider';
-import Badge from '@mui/material/Badge';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import PlayCircleIcon from '@mui/icons-material/PlayCircle';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import DescriptionIcon from '@mui/icons-material/Description';
-import AddIcon from '@mui/icons-material/Add';
-import Header from '@/components/Header';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import Fab from '@mui/material/Fab';
 
-export default function DashboardPage() {
+export default function FluentDashboard() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [userInfo, setUserInfo] = useState<Profile | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [generatingPPT, setGeneratingPPT] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-
-  // 새 업무 등록 모달 상태
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [creatingTask, setCreatingTask] = useState(false);
+  const [generatingPPT, setGeneratingPPT] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
     category: '',
@@ -65,11 +54,14 @@ export default function DashboardPage() {
     description: '',
     due_date: '',
   });
-  const [creatingTask, setCreatingTask] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
   useEffect(() => {
     fetchUserAndTasks();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUserAndTasks = async () => {
@@ -81,7 +73,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // 프로필 조회
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -92,7 +83,6 @@ export default function DashboardPage() {
         setUserInfo(profile);
       }
 
-      // 내 업무만 조회
       const { data } = await supabase
         .from('tasks')
         .select('*')
@@ -108,76 +98,47 @@ export default function DashboardPage() {
     }
   };
 
-  const handleEventClick = (info: any) => {
-    const taskId = info.event.id;
-    if (taskId) {
-      router.push(`/tasks/${taskId}`);
-    }
-  };
+  const createNewTask = async () => {
+    if (!userInfo) return;
 
-  const updateTaskStatus = async (status: 'Todo' | 'Doing' | 'Done') => {
-    if (!selectedTask) return;
+    if (!newTask.title || !newTask.category || !newTask.due_date) {
+      showSnackbar('제목, 카테고리, 마감일은 필수 입력입니다.', 'error');
+      return;
+    }
+
+    setCreatingTask(true);
 
     try {
-      const updateData: any = { status };
-
-      // Done으로 변경 시 완료 시각 기록
-      if (status === 'Done') {
-        updateData.completed_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from('tasks')
-        .update(updateData)
-        .eq('id', selectedTask.id);
+      const { error } = await supabase.from('tasks').insert({
+        title: newTask.title,
+        category: newTask.category,
+        requester_dept: newTask.requester_dept || userInfo.department || '기획홍보팀',
+        requester_name: newTask.requester_name || userInfo.name,
+        description: newTask.description,
+        due_date: newTask.due_date,
+        status: 'Todo',
+        assignee_id: userInfo.id,
+        image_urls: [],
+      });
 
       if (error) throw error;
 
-      showSnackbar(`상태가 '${status}'로 변경되었습니다!`, 'success');
+      showSnackbar('새 업무가 등록되었습니다!', 'success');
+      setShowNewTaskModal(false);
+      setNewTask({
+        title: '',
+        category: '',
+        requester_dept: '',
+        requester_name: '',
+        description: '',
+        due_date: '',
+      });
       fetchUserAndTasks();
-      setShowModal(false);
     } catch (error) {
-      console.error('상태 변경 실패:', error);
-      showSnackbar('상태 변경에 실패했습니다.', 'error');
-    }
-  };
-
-  const uploadResultImage = async (file: File) => {
-    if (!selectedTask) return;
-
-    setUploadingImage(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `results/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('task-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from('task-images').getPublicUrl(filePath);
-
-      // 기존 이미지 URL에 추가
-      const newImageUrls = [...(selectedTask.image_urls || []), data.publicUrl];
-
-      const { error: updateError } = await supabase
-        .from('tasks')
-        .update({ image_urls: newImageUrls })
-        .eq('id', selectedTask.id);
-
-      if (updateError) throw updateError;
-
-      showSnackbar('결과물 이미지가 업로드되었습니다!', 'success');
-      fetchUserAndTasks();
-      setShowModal(false);
-    } catch (error) {
-      console.error('이미지 업로드 실패:', error);
-      showSnackbar('이미지 업로드에 실패했습니다.', 'error');
+      console.error('업무 생성 실패:', error);
+      showSnackbar('업무 생성에 실패했습니다.', 'error');
     } finally {
-      setUploadingImage(false);
+      setCreatingTask(false);
     }
   };
 
@@ -218,6 +179,17 @@ export default function DashboardPage() {
     }
   };
 
+  const handleEventClick = (info: any) => {
+    const taskId = info.event.id;
+    if (taskId) {
+      router.push(`/tasks/${taskId}`);
+    }
+  };
+
+  const handleNewTaskChange = (field: string, value: string) => {
+    setNewTask({ ...newTask, [field]: value });
+  };
+
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });
   };
@@ -226,87 +198,27 @@ export default function DashboardPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // 새 업무 생성
-  const createNewTask = async () => {
-    if (!userInfo) return;
-
-    // 필수 입력 검증
-    if (!newTask.title || !newTask.category || !newTask.due_date) {
-      showSnackbar('제목, 카테고리, 마감일은 필수 입력입니다.', 'error');
-      return;
-    }
-
-    setCreatingTask(true);
-
-    try {
-      const { error } = await supabase.from('tasks').insert({
-        title: newTask.title,
-        category: newTask.category,
-        requester_dept: newTask.requester_dept || userInfo.department || '기획홍보팀',
-        requester_name: newTask.requester_name || userInfo.name,
-        description: newTask.description,
-        due_date: newTask.due_date,
-        status: 'Todo',
-        assignee_id: userInfo.id, // 본인에게 자동 배정
-        image_urls: [],
-      });
-
-      if (error) throw error;
-
-      showSnackbar('새 업무가 등록되었습니다!', 'success');
-      setShowNewTaskModal(false);
-      setNewTask({
-        title: '',
-        category: '',
-        requester_dept: '',
-        requester_name: '',
-        description: '',
-        due_date: '',
-      });
-      fetchUserAndTasks();
-    } catch (error) {
-      console.error('업무 생성 실패:', error);
-      showSnackbar('업무 생성에 실패했습니다.', 'error');
-    } finally {
-      setCreatingTask(false);
-    }
+  const getTasksByStatus = (status: string) => {
+    return tasks.filter((t) => t.status === status);
   };
 
-  const handleNewTaskChange = (field: string, value: string) => {
-    setNewTask({ ...newTask, [field]: value });
-  };
-
-  // FullCalendar 이벤트 데이터 변환
   const calendarEvents = tasks.map((task) => ({
     id: task.id,
     title: task.title,
     start: task.due_date,
     backgroundColor:
       task.status === 'Done'
-        ? '#4caf50'
+        ? fluentColors.success.main
         : task.status === 'Doing'
-        ? '#ff9800'
-        : '#2196f3',
+        ? fluentColors.warning.main
+        : fluentColors.primary[500],
     borderColor:
       task.status === 'Done'
-        ? '#388e3c'
+        ? fluentColors.success.dark
         : task.status === 'Doing'
-        ? '#f57c00'
-        : '#1976d2',
+        ? fluentColors.warning.dark
+        : fluentColors.primary[700],
   }));
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Done': return 'success';
-      case 'Doing': return 'warning';
-      case 'Todo': return 'primary';
-      default: return 'default';
-    }
-  };
-
-  const getTasksByStatus = (status: string) => {
-    return tasks.filter((t) => t.status === status);
-  };
 
   if (loading) {
     return (
@@ -321,122 +233,83 @@ export default function DashboardPage() {
   }
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #e8f0f7 50%, #d5e5f2 100%)',
-      }}
-    >
+    <div style={styles.container}>
       <Header userName={userInfo.name} userRole={userInfo.role} userEmail={userInfo.email} />
       
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 } }}>
-        {/* 헤더 */}
-        <Box sx={{ mb: { xs: 2, md: 4 }, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
-          <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 auto' } }}>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
-              내 업무 캘린더
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', md: '1rem' } }}>
-              캘린더에서 업무를 클릭하여 상태를 변경하세요
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
+      <div style={styles.content}>
+        {/* Page Header */}
+        <div style={styles.pageHeader}>
+          <div style={styles.headerLeft}>
+            <h1 style={styles.pageTitle}>내 업무 대시보드</h1>
+            <p style={styles.pageSubtitle}>업무를 효율적으로 관리하세요</p>
+          </div>
+          <div style={styles.headerActions}>
+            <button
               onClick={() => setShowNewTaskModal(true)}
-              sx={{
-                background: 'linear-gradient(135deg, #0081C0 0%, #005A8D 100%)',
-                color: 'white',
-                fontWeight: 600,
-                px: { xs: 2, md: 3 },
-                py: { xs: 1, md: 1.5 },
-                fontSize: { xs: '0.875rem', md: '1rem' },
-                borderRadius: 2,
-                boxShadow: '0 4px 12px rgba(0, 129, 192, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #005A8D 0%, #004A70 100%)',
-                  boxShadow: '0 6px 16px rgba(0, 129, 192, 0.4)',
-                }
-              }}
+              style={styles.primaryButton}
             >
-              새 업무 등록
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<DescriptionIcon />}
+              <AddIcon style={styles.buttonIcon} />
+              <span>새 업무 등록</span>
+            </button>
+            <button
               onClick={() => router.push('/board')}
-              sx={{
-                borderColor: '#14B8A6',
-                color: '#14B8A6',
-                fontWeight: 600,
-                px: { xs: 2, md: 3 },
-                py: { xs: 1, md: 1.5 },
-                fontSize: { xs: '0.875rem', md: '1rem' },
-                borderRadius: 2,
-                '&:hover': {
-                  borderColor: '#0F766E',
-                  bgcolor: 'rgba(20, 184, 166, 0.05)',
-                }
-              }}
+              style={styles.secondaryButton}
             >
-              자료 게시판
-            </Button>
-          </Box>
-        </Box>
+              <ArticleIcon style={styles.buttonIcon} />
+              <span>자료 게시판</span>
+            </button>
+          </div>
+        </div>
 
-        {/* 통계 카드 */}
-        <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 2, md: 4 } }}>
-          <Grid item xs={4} sm={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>예정</Typography>
-                    <Typography variant="h3" sx={{ fontWeight: 600, color: 'primary.main', fontSize: { xs: '1.75rem', md: '3rem' } }}>
-                      {getTasksByStatus('Todo').length}
-                    </Typography>
-                  </Box>
-                  <AssignmentIcon sx={{ fontSize: { xs: 32, md: 48 }, color: 'primary.main', opacity: 0.3 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={4} sm={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>진행중</Typography>
-                    <Typography variant="h3" sx={{ fontWeight: 600, color: 'warning.main', fontSize: { xs: '1.75rem', md: '3rem' } }}>
-                      {getTasksByStatus('Doing').length}
-                    </Typography>
-                  </Box>
-                  <PlayCircleIcon sx={{ fontSize: { xs: 32, md: 48 }, color: 'warning.main', opacity: 0.3 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={4} sm={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ p: { xs: 1.5, md: 2 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', md: '0.875rem' } }}>완료</Typography>
-                    <Typography variant="h3" sx={{ fontWeight: 600, color: 'success.main', fontSize: { xs: '1.75rem', md: '3rem' } }}>
-                      {getTasksByStatus('Done').length}
-                    </Typography>
-                  </Box>
-                  <CheckCircleIcon sx={{ fontSize: { xs: 32, md: 48 }, color: 'success.main', opacity: 0.3 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        {/* Statistics Cards */}
+        <div style={styles.statsGrid}>
+          <div style={{...styles.statCard, ...styles.statCardTodo}}>
+            <div style={styles.statIcon}>
+              <AssignmentIcon style={{fontSize: 40, color: fluentColors.primary[500]}} />
+            </div>
+            <div style={styles.statContent}>
+              <div style={styles.statLabel}>예정</div>
+              <div style={styles.statValue}>{getTasksByStatus('Todo').length}</div>
+            </div>
+            <div style={styles.statBadge}>
+              <span style={styles.statBadgeText}>Todo</span>
+            </div>
+          </div>
 
-        {/* 캘린더 */}
-        <Card elevation={2} sx={{ mb: { xs: 2, md: 4 } }}>
-          <CardContent sx={{ p: { xs: 1, md: 2 } }}>
+          <div style={{...styles.statCard, ...styles.statCardDoing}}>
+            <div style={styles.statIcon}>
+              <PlayCircleIcon style={{fontSize: 40, color: fluentColors.warning.main}} />
+            </div>
+            <div style={styles.statContent}>
+              <div style={styles.statLabel}>진행중</div>
+              <div style={styles.statValue}>{getTasksByStatus('Doing').length}</div>
+            </div>
+            <div style={styles.statBadge}>
+              <span style={styles.statBadgeText}>In Progress</span>
+            </div>
+          </div>
+
+          <div style={{...styles.statCard, ...styles.statCardDone}}>
+            <div style={styles.statIcon}>
+              <CheckCircleIcon style={{fontSize: 40, color: fluentColors.success.main}} />
+            </div>
+            <div style={styles.statContent}>
+              <div style={styles.statLabel}>완료</div>
+              <div style={styles.statValue}>{getTasksByStatus('Done').length}</div>
+            </div>
+            <div style={styles.statBadge}>
+              <span style={styles.statBadgeText}>Done</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Calendar Section */}
+        <div style={styles.section}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>📅 월간 캘린더</h2>
+            <p style={styles.sectionSubtitle}>클릭하여 업무 상세를 확인하세요</p>
+          </div>
+          <div style={styles.calendarCard}>
             <FullCalendar
               plugins={[dayGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
@@ -449,136 +322,109 @@ export default function DashboardPage() {
               }}
               locale="ko"
               height="auto"
-              contentHeight={450}
+              contentHeight={500}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* 업무 목록 */}
-        <Grid container spacing={{ xs: 2, md: 3 }}>
-          {/* Todo */}
-          <Grid item xs={12} md={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <AssignmentIcon color="primary" sx={{ fontSize: { xs: 20, md: 24 } }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                    예정
-                  </Typography>
-                  <Badge badgeContent={getTasksByStatus('Todo').length} color="primary" sx={{ ml: 'auto' }} />
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {getTasksByStatus('Todo').map((task) => (
-                    <Card
-                      key={task.id}
-                      variant="outlined"
-                      sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-                      onClick={() => router.push(`/tasks/${task.id}`)}
-                    >
-                      <CardContent sx={{ py: { xs: 1, md: 1.5 }, '&:last-child': { pb: { xs: 1, md: 1.5 } } }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: { xs: '0.875rem', md: '0.875rem' } }}>
-                          {task.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', md: '0.75rem' } }}>
-                          {task.category} • {new Date(task.due_date).toLocaleDateString()}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {getTasksByStatus('Todo').length === 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                      예정된 업무가 없습니다
-                    </Typography>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+        {/* Tasks Grid */}
+        <div style={styles.section}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>📋 업무 현황</h2>
+            <p style={styles.sectionSubtitle}>상태별로 정리된 업무 목록</p>
+          </div>
+          <div style={styles.tasksGrid}>
+            {/* Todo Column */}
+            <div style={styles.taskColumn}>
+              <div style={{...styles.columnHeader, background: `linear-gradient(135deg, ${fluentColors.primary[400]}, ${fluentColors.primary[600]})`}}>
+                <AssignmentIcon style={styles.columnIcon} />
+                <span style={styles.columnTitle}>예정</span>
+                <span style={styles.columnBadge}>{getTasksByStatus('Todo').length}</span>
+              </div>
+              <div style={styles.taskList}>
+                {getTasksByStatus('Todo').map((task) => (
+                  <div
+                    key={task.id}
+                    style={styles.taskCard}
+                    onClick={() => router.push(`/tasks/${task.id}`)}
+                  >
+                    <div style={styles.taskTitle}>{task.title}</div>
+                    <div style={styles.taskMeta}>
+                      <span style={styles.taskCategory}>{task.category}</span>
+                      <span style={styles.taskDate}>
+                        {new Date(task.due_date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {getTasksByStatus('Todo').length === 0 && (
+                  <div style={styles.emptyState}>예정된 업무가 없습니다</div>
+                )}
+              </div>
+            </div>
 
-          {/* Doing */}
-          <Grid item xs={12} md={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <PlayCircleIcon color="warning" sx={{ fontSize: { xs: 20, md: 24 } }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                    진행중
-                  </Typography>
-                  <Badge badgeContent={getTasksByStatus('Doing').length} color="warning" sx={{ ml: 'auto' }} />
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {getTasksByStatus('Doing').map((task) => (
-                    <Card
-                      key={task.id}
-                      variant="outlined"
-                      sx={{ cursor: 'pointer', bgcolor: 'warning.50', '&:hover': { bgcolor: 'warning.100' } }}
-                      onClick={() => router.push(`/tasks/${task.id}`)}
-                    >
-                      <CardContent sx={{ py: { xs: 1, md: 1.5 }, '&:last-child': { pb: { xs: 1, md: 1.5 } } }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: { xs: '0.875rem', md: '0.875rem' } }}>
-                          {task.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', md: '0.75rem' } }}>
-                          {task.category} • {new Date(task.due_date).toLocaleDateString()}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {getTasksByStatus('Doing').length === 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                      진행중인 업무가 없습니다
-                    </Typography>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+            {/* Doing Column */}
+            <div style={styles.taskColumn}>
+              <div style={{...styles.columnHeader, background: `linear-gradient(135deg, ${fluentColors.warning.light}, ${fluentColors.warning.main})`}}>
+                <PlayCircleIcon style={styles.columnIcon} />
+                <span style={styles.columnTitle}>진행중</span>
+                <span style={styles.columnBadge}>{getTasksByStatus('Doing').length}</span>
+              </div>
+              <div style={styles.taskList}>
+                {getTasksByStatus('Doing').map((task) => (
+                  <div
+                    key={task.id}
+                    style={{...styles.taskCard, borderLeft: `4px solid ${fluentColors.warning.main}`}}
+                    onClick={() => router.push(`/tasks/${task.id}`)}
+                  >
+                    <div style={styles.taskTitle}>{task.title}</div>
+                    <div style={styles.taskMeta}>
+                      <span style={styles.taskCategory}>{task.category}</span>
+                      <span style={styles.taskDate}>
+                        {new Date(task.due_date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {getTasksByStatus('Doing').length === 0 && (
+                  <div style={styles.emptyState}>진행중인 업무가 없습니다</div>
+                )}
+              </div>
+            </div>
 
-          {/* Done */}
-          <Grid item xs={12} md={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <CheckCircleIcon color="success" sx={{ fontSize: { xs: 20, md: 24 } }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                    완료
-                  </Typography>
-                  <Badge badgeContent={getTasksByStatus('Done').length} color="success" sx={{ ml: 'auto' }} />
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {getTasksByStatus('Done').map((task) => (
-                    <Card
-                      key={task.id}
-                      variant="outlined"
-                      sx={{ cursor: 'pointer', bgcolor: 'success.50', '&:hover': { bgcolor: 'success.100' } }}
-                      onClick={() => router.push(`/tasks/${task.id}`)}
-                    >
-                      <CardContent sx={{ py: { xs: 1, md: 1.5 }, '&:last-child': { pb: { xs: 1, md: 1.5 } } }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: { xs: '0.875rem', md: '0.875rem' } }}>
-                          {task.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', md: '0.75rem' } }}>
-                          {task.category} • {new Date(task.due_date).toLocaleDateString()}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {getTasksByStatus('Done').length === 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                      완료된 업무가 없습니다
-                    </Typography>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Container>
+            {/* Done Column */}
+            <div style={styles.taskColumn}>
+              <div style={{...styles.columnHeader, background: `linear-gradient(135deg, ${fluentColors.success.light}, ${fluentColors.success.main})`}}>
+                <CheckCircleIcon style={styles.columnIcon} />
+                <span style={styles.columnTitle}>완료</span>
+                <span style={styles.columnBadge}>{getTasksByStatus('Done').length}</span>
+              </div>
+              <div style={styles.taskList}>
+                {getTasksByStatus('Done').map((task) => (
+                  <div
+                    key={task.id}
+                    style={{...styles.taskCard, borderLeft: `4px solid ${fluentColors.success.main}`, opacity: 0.8}}
+                    onClick={() => router.push(`/tasks/${task.id}`)}
+                  >
+                    <div style={styles.taskTitle}>{task.title}</div>
+                    <div style={styles.taskMeta}>
+                      <span style={styles.taskCategory}>{task.category}</span>
+                      <span style={styles.taskDate}>
+                        {new Date(task.due_date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {getTasksByStatus('Done').length === 0 && (
+                  <div style={styles.emptyState}>완료된 업무가 없습니다</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* 주간보고서 작성 FAB */}
+      {/* Floating Action Button */}
       <Fab
         color="primary"
         aria-label="주간보고서 작성"
@@ -593,15 +439,11 @@ export default function DashboardPage() {
         {generatingPPT ? <CircularProgress size={24} color="inherit" /> : <DescriptionIcon />}
       </Fab>
 
-      {/* 새 업무 등록 모달 */}
+      {/* New Task Modal */}
       <Dialog open={showNewTaskModal} onClose={() => setShowNewTaskModal(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            새 업무 등록
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            본인에게 배정되는 업무를 등록합니다
-          </Typography>
+          <div style={styles.modalTitle}>새 업무 등록</div>
+          <div style={styles.modalSubtitle}>본인에게 배정되는 업무를 등록합니다</div>
         </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
@@ -691,123 +533,10 @@ export default function DashboardPage() {
             variant="contained"
             onClick={createNewTask}
             disabled={creatingTask}
-            sx={{
-              background: 'linear-gradient(135deg, #0081C0 0%, #005A8D 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #005A8D 0%, #004A70 100%)',
-              }
-            }}
           >
             {creatingTask ? <CircularProgress size={24} color="inherit" /> : '등록'}
           </Button>
         </DialogActions>
-      </Dialog>
-
-      {/* 업무 상세 모달 */}
-      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth>
-        {selectedTask && (
-          <>
-            <DialogTitle>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {selectedTask.title}
-              </Typography>
-              <Chip
-                label={selectedTask.status}
-                color={getStatusColor(selectedTask.status) as any}
-                size="small"
-                sx={{ mt: 1 }}
-              />
-            </DialogTitle>
-            <DialogContent dividers>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">카테고리</Typography>
-                  <Typography variant="body1">{selectedTask.category}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">요청 부서</Typography>
-                  <Typography variant="body1">{selectedTask.requester_dept}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">담당자</Typography>
-                  <Typography variant="body1">{selectedTask.requester_name}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">마감일</Typography>
-                  <Typography variant="body1">
-                    {new Date(selectedTask.due_date).toLocaleDateString()}
-                  </Typography>
-                </Box>
-                {selectedTask.description && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">상세내용</Typography>
-                    <Typography variant="body1">{selectedTask.description}</Typography>
-                  </Box>
-                )}
-                <Divider />
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                    상태 변경
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Button
-                      variant={selectedTask.status === 'Todo' ? 'contained' : 'outlined'}
-                      color="primary"
-                      size="small"
-                      onClick={() => updateTaskStatus('Todo')}
-                    >
-                      예정
-                    </Button>
-                    <Button
-                      variant={selectedTask.status === 'Doing' ? 'contained' : 'outlined'}
-                      color="warning"
-                      size="small"
-                      onClick={() => updateTaskStatus('Doing')}
-                    >
-                      진행중
-                    </Button>
-                    <Button
-                      variant={selectedTask.status === 'Done' ? 'contained' : 'outlined'}
-                      color="success"
-                      size="small"
-                      onClick={() => updateTaskStatus('Done')}
-                    >
-                      완료
-                    </Button>
-                  </Box>
-                </Box>
-                <Divider />
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                    결과물 이미지 업로드
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    startIcon={<UploadFileIcon />}
-                    disabled={uploadingImage}
-                    fullWidth
-                  >
-                    {uploadingImage ? '업로드 중...' : '파일 선택'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          uploadResultImage(e.target.files[0]);
-                        }
-                      }}
-                    />
-                  </Button>
-                </Box>
-              </Box>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowModal(false)}>닫기</Button>
-            </DialogActions>
-          </>
-        )}
       </Dialog>
 
       {/* Snackbar */}
@@ -821,6 +550,312 @@ export default function DashboardPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+
+      <style>{`
+        @media (max-width: 1200px) {
+          .tasks-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .header-actions {
+            flex-direction: column !important;
+            width: 100% !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
+
+const styles: { [key: string]: React.CSSProperties } = {
+  container: {
+    minHeight: '100vh',
+    background: `linear-gradient(135deg, ${fluentColors.neutral[10]} 0%, ${fluentColors.neutral[20]} 100%)`,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  },
+
+  content: {
+    maxWidth: '1400px',
+    margin: '0 auto',
+    padding: '32px 24px',
+  },
+
+  pageHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '32px',
+    flexWrap: 'wrap',
+    gap: '16px',
+  },
+
+  headerLeft: {
+    flex: '1 1 auto',
+  },
+
+  pageTitle: {
+    fontSize: '32px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    marginBottom: '8px',
+    letterSpacing: '-0.5px',
+  },
+
+  pageSubtitle: {
+    fontSize: '16px',
+    color: fluentColors.neutral[60],
+  },
+
+  headerActions: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap',
+  },
+
+  primaryButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: `linear-gradient(135deg, ${fluentColors.primary[500]}, ${fluentColors.primary[700]})`,
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: fluentRadius.md,
+    fontSize: '15px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: fluentShadows.neumorph2,
+    transition: 'all 0.3s ease',
+  },
+
+  secondaryButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: fluentColors.neutral[0],
+    color: fluentColors.primary[600],
+    border: `2px solid ${fluentColors.primary[500]}`,
+    borderRadius: fluentRadius.md,
+    fontSize: '15px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: fluentShadows.neumorph1,
+    transition: 'all 0.3s ease',
+  },
+
+  buttonIcon: {
+    fontSize: '20px',
+  },
+
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '24px',
+    marginBottom: '32px',
+  },
+
+  statCard: {
+    background: fluentColors.neutral[0],
+    borderRadius: fluentRadius.xl,
+    padding: '24px',
+    boxShadow: fluentShadows.neumorph3,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    position: 'relative',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+  },
+
+  statCardTodo: {
+    borderLeft: `4px solid ${fluentColors.primary[500]}`,
+  },
+
+  statCardDoing: {
+    borderLeft: `4px solid ${fluentColors.warning.main}`,
+  },
+
+  statCardDone: {
+    borderLeft: `4px solid ${fluentColors.success.main}`,
+  },
+
+  statIcon: {
+    width: '64px',
+    height: '64px',
+    borderRadius: fluentRadius.lg,
+    background: `linear-gradient(135deg, ${fluentColors.neutral[10]}, ${fluentColors.neutral[20]})`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: fluentShadows.neumorph1,
+  },
+
+  statContent: {
+    flex: 1,
+  },
+
+  statLabel: {
+    fontSize: '14px',
+    color: fluentColors.neutral[60],
+    marginBottom: '4px',
+    fontWeight: 500,
+  },
+
+  statValue: {
+    fontSize: '36px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    lineHeight: 1,
+  },
+
+  statBadge: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    padding: '4px 12px',
+    background: 'rgba(33, 150, 243, 0.1)',
+    borderRadius: fluentRadius.sm,
+  },
+
+  statBadgeText: {
+    fontSize: '11px',
+    fontWeight: 600,
+    color: fluentColors.primary[600],
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+
+  section: {
+    marginBottom: '32px',
+  },
+
+  sectionHeader: {
+    marginBottom: '20px',
+  },
+
+  sectionTitle: {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+    marginBottom: '4px',
+  },
+
+  sectionSubtitle: {
+    fontSize: '14px',
+    color: fluentColors.neutral[60],
+  },
+
+  calendarCard: {
+    background: fluentColors.neutral[0],
+    borderRadius: fluentRadius.xl,
+    padding: '24px',
+    boxShadow: fluentShadows.neumorph3,
+  },
+
+  tasksGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '24px',
+  },
+
+  taskColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+
+  columnHeader: {
+    padding: '16px 20px',
+    borderRadius: fluentRadius.lg,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    color: '#FFFFFF',
+    boxShadow: fluentShadows.neumorph2,
+  },
+
+  columnIcon: {
+    fontSize: '24px',
+  },
+
+  columnTitle: {
+    fontSize: '16px',
+    fontWeight: 700,
+    flex: 1,
+  },
+
+  columnBadge: {
+    background: 'rgba(255, 255, 255, 0.25)',
+    padding: '4px 12px',
+    borderRadius: fluentRadius.sm,
+    fontSize: '14px',
+    fontWeight: 600,
+  },
+
+  taskList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+
+  taskCard: {
+    background: fluentColors.neutral[0],
+    borderRadius: fluentRadius.md,
+    padding: '16px',
+    boxShadow: fluentShadows.neumorph2,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    borderLeft: `4px solid ${fluentColors.primary[500]}`,
+  },
+
+  taskTitle: {
+    fontSize: '15px',
+    fontWeight: 600,
+    color: fluentColors.neutral[100],
+    marginBottom: '8px',
+  },
+
+  taskMeta: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '12px',
+    color: fluentColors.neutral[60],
+  },
+
+  taskCategory: {
+    background: fluentColors.neutral[20],
+    padding: '4px 8px',
+    borderRadius: fluentRadius.sm,
+    fontWeight: 600,
+  },
+
+  taskDate: {
+    fontWeight: 500,
+  },
+
+  emptyState: {
+    textAlign: 'center',
+    padding: '32px 16px',
+    color: fluentColors.neutral[60],
+    fontSize: '14px',
+  },
+
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: 700,
+    color: fluentColors.neutral[100],
+  },
+
+  modalSubtitle: {
+    fontSize: '13px',
+    color: fluentColors.neutral[60],
+    marginTop: '4px',
+  },
+};

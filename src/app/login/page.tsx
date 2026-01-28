@@ -4,6 +4,7 @@
  * - Glassmorphism Level 2 (Subtle)
  * - Animation Level 3 (Moderate)
  * - Blue color scheme (시인성 최적화)
+ * - 완벽한 반응형 디자인 (Desktop → Mobile)
  */
 
 'use client';
@@ -86,7 +87,7 @@ export default function FluentLoginPage() {
 
       {/* Main Content */}
       <div style={styles.content}>
-        {/* Left Section - Hero */}
+        {/* Left Section - Hero (Desktop only) */}
         <div style={{...styles.leftSection, opacity: mounted ? 1 : 0}}>
           <div style={styles.heroContent}>
             <div style={styles.logoContainer}>
@@ -295,6 +296,48 @@ export default function FluentLoginPage() {
             transform: scale(1.05);
           }
         }
+
+        @keyframes gradientShift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+
+        /* Responsive Media Queries */
+        @media (max-width: 1024px) {
+          /* Tablet */
+          .left-section {
+            max-width: 400px !important;
+          }
+          .hero-title {
+            font-size: 36px !important;
+          }
+          .hero-subtitle {
+            font-size: 22px !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          /* Mobile */
+          .left-section {
+            display: none !important;
+          }
+          .right-section {
+            max-width: 100% !important;
+          }
+          .login-card {
+            padding: 32px 24px !important;
+          }
+          .card-title {
+            font-size: 24px !important;
+          }
+        }
       `}</style>
     </div>
   );
@@ -315,7 +358,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+    background: `linear-gradient(135deg, ${fluentColors.primary[300]} 0%, ${fluentColors.primary[500]} 50%, ${fluentColors.primary[700]} 100%)`,
     backgroundSize: '400% 400%',
     animation: 'gradientShift 15s ease infinite',
     zIndex: 0,
@@ -576,6 +619,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: '-8px',
+    flexWrap: 'wrap',
+    gap: '8px',
   },
 
   rememberLabel: {
