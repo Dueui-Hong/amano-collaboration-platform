@@ -259,13 +259,13 @@ export default function FluentDashboard() {
         </div>
 
         {/* Statistics Cards */}
-        <div style={styles.statsGrid}>
-          <div style={{...styles.statCard, ...styles.statCardTodo}}>
-            <div style={styles.statIcon}>
+        <div className="stats-grid" style={styles.statsGrid}>
+          <div className="stat-card" style={{...styles.statCard, ...styles.statCardTodo}}>
+            <div className="stat-icon" style={styles.statIcon}>
               <AssignmentIcon style={{fontSize: 40, color: fluentColors.primary[500]}} />
             </div>
             <div style={styles.statContent}>
-              <div style={styles.statLabel}>예정</div>
+              <div className="stat-label" style={styles.statLabel}>예정</div>
               <div style={styles.statValue}>{getTasksByStatus('Todo').length}</div>
             </div>
             <div style={styles.statBadge}>
@@ -273,12 +273,12 @@ export default function FluentDashboard() {
             </div>
           </div>
 
-          <div style={{...styles.statCard, ...styles.statCardDoing}}>
-            <div style={styles.statIcon}>
+          <div className="stat-card" style={{...styles.statCard, ...styles.statCardDoing}}>
+            <div className="stat-icon" style={styles.statIcon}>
               <PlayCircleIcon style={{fontSize: 40, color: fluentColors.warning.main}} />
             </div>
             <div style={styles.statContent}>
-              <div style={styles.statLabel}>진행중</div>
+              <div className="stat-label" style={styles.statLabel}>진행중</div>
               <div style={styles.statValue}>{getTasksByStatus('Doing').length}</div>
             </div>
             <div style={styles.statBadge}>
@@ -286,12 +286,12 @@ export default function FluentDashboard() {
             </div>
           </div>
 
-          <div style={{...styles.statCard, ...styles.statCardDone}}>
-            <div style={styles.statIcon}>
+          <div className="stat-card" style={{...styles.statCard, ...styles.statCardDone}}>
+            <div className="stat-icon" style={styles.statIcon}>
               <CheckCircleIcon style={{fontSize: 40, color: fluentColors.success.main}} />
             </div>
             <div style={styles.statContent}>
-              <div style={styles.statLabel}>완료</div>
+              <div className="stat-label" style={styles.statLabel}>완료</div>
               <div style={styles.statValue}>{getTasksByStatus('Done').length}</div>
             </div>
             <div style={styles.statBadge}>
@@ -556,7 +556,7 @@ export default function FluentDashboard() {
           .stats-grid,
           .tasks-grid {
             grid-template-columns: 1fr !important;
-            gap: 12px !important;
+            gap: 8px !important;
           }
           
           /* 헤더 액션 */
@@ -568,13 +568,13 @@ export default function FluentDashboard() {
           
           /* 패딩 최소화 */
           div[style*="padding: 32px 24px"] {
-            padding: 12px 8px !important;
+            padding: 8px !important;
           }
           div[style*="padding: 24px"] {
-            padding: 12px !important;
+            padding: 8px !important;
           }
           div[style*="padding: 20px"] {
-            padding: 10px !important;
+            padding: 8px !important;
           }
           div[style*="padding: 16px"] {
             padding: 8px !important;
@@ -582,32 +582,51 @@ export default function FluentDashboard() {
           
           /* 제목 크기 */
           h1 {
-            font-size: 18px !important;
+            font-size: 16px !important;
             line-height: 1.3 !important;
+            margin-bottom: 4px !important;
           }
           h2 {
-            font-size: 16px !important;
+            font-size: 14px !important;
+            margin-bottom: 8px !important;
           }
           h3 {
-            font-size: 14px !important;
+            font-size: 12px !important;
+          }
+          p {
+            font-size: 11px !important;
+          }
+          
+          /* 통계 카드 - 대폭 축소 */
+          .stat-card {
+            padding: 8px !important;
+            gap: 4px !important;
+          }
+          .stat-icon {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .stat-icon svg {
+            font-size: 20px !important;
+          }
+          div[style*="font-size: 40px"] {
+            font-size: 18px !important;
+          }
+          .stat-label {
+            font-size: 10px !important;
           }
           
           /* 버튼 */
           button {
             font-size: 12px !important;
-            padding: 8px 12px !important;
-            min-height: 40px !important;
+            padding: 10px 12px !important;
+            min-height: 44px !important;
             width: 100% !important;
-          }
-          
-          /* 통계 카드 */
-          div[style*="font-size: 40px"] {
-            font-size: 28px !important;
           }
           
           /* 칸반 카드 */
           div[style*="taskCard"] {
-            padding: 10px !important;
+            padding: 8px !important;
           }
         }
         
@@ -674,6 +693,8 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   mainLayout: {
     display: 'flex',
+    minHeight: 'calc(100vh - 64px)',
+    overflow: 'hidden',
   },
 
   content: {
@@ -681,6 +702,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '1400px',
     margin: '0 auto',
     padding: '32px 24px',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    height: 'calc(100vh - 64px)',
+    boxSizing: 'border-box',
   },
 
   pageHeader: {

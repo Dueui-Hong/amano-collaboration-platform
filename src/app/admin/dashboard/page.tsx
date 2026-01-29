@@ -386,63 +386,63 @@ export default function FluentAdminDashboard() {
             /* 업무 현황 View */
             <>
               {/* Statistics Cards */}
-              <div style={styles.statsGrid}>
-                <div style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.primary[500]}`}}>
-                  <div style={styles.statIcon}>
+              <div className="stats-grid" style={styles.statsGrid}>
+                <div className="stat-card" style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.primary[500]}`}}>
+                  <div className="stat-icon" style={styles.statIcon}>
                     <TodayIcon style={{fontSize: 40, color: fluentColors.primary[500]}} />
                   </div>
                   <div style={styles.statContent}>
-                    <div style={styles.statLabel}>오늘 마감</div>
+                    <div className="stat-label" style={styles.statLabel}>오늘 마감</div>
                     <div style={styles.statValue}>{stats.todayTasks}</div>
                   </div>
                 </div>
 
-                <div style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.accent[600]}`}}>
-                  <div style={styles.statIcon}>
+                <div className="stat-card" style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.accent[600]}`}}>
+                  <div className="stat-icon" style={styles.statIcon}>
                     <DateRangeIcon style={{fontSize: 40, color: fluentColors.accent[600]}} />
                   </div>
                   <div style={styles.statContent}>
-                    <div style={styles.statLabel}>이번주</div>
+                    <div className="stat-label" style={styles.statLabel}>이번주</div>
                     <div style={styles.statValue}>{stats.weekTasks}</div>
                   </div>
                 </div>
 
-                <div style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.error.main}`}}>
-                  <div style={styles.statIcon}>
+                <div className="stat-card" style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.error.main}`}}>
+                  <div className="stat-icon" style={styles.statIcon}>
                     <WarningIcon style={{fontSize: 40, color: fluentColors.error.main}} />
                   </div>
                   <div style={styles.statContent}>
-                    <div style={styles.statLabel}>긴급 (D-3)</div>
+                    <div className="stat-label" style={styles.statLabel}>긴급 (D-3)</div>
                     <div style={styles.statValue}>{stats.urgentTasks}</div>
                   </div>
                 </div>
 
-                <div style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.warning.main}`}}>
-                  <div style={styles.statIcon}>
+                <div className="stat-card" style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.warning.main}`}}>
+                  <div className="stat-icon" style={styles.statIcon}>
                     <AssignmentIcon style={{fontSize: 40, color: fluentColors.warning.main}} />
                   </div>
                   <div style={styles.statContent}>
-                    <div style={styles.statLabel}>예정</div>
+                    <div className="stat-label" style={styles.statLabel}>예정</div>
                     <div style={styles.statValue}>{stats.totalTodo}</div>
                   </div>
                 </div>
 
-                <div style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.info.main}`}}>
-                  <div style={styles.statIcon}>
+                <div className="stat-card" style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.info.main}`}}>
+                  <div className="stat-icon" style={styles.statIcon}>
                     <PlayCircleIcon style={{fontSize: 40, color: fluentColors.info.main}} />
                   </div>
                   <div style={styles.statContent}>
-                    <div style={styles.statLabel}>진행중</div>
+                    <div className="stat-label" style={styles.statLabel}>진행중</div>
                     <div style={styles.statValue}>{stats.totalDoing}</div>
                   </div>
                 </div>
 
-                <div style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.success.main}`}}>
-                  <div style={styles.statIcon}>
+                <div className="stat-card" style={{...styles.statCard, borderLeft: `4px solid ${fluentColors.success.main}`}}>
+                  <div className="stat-icon" style={styles.statIcon}>
                     <CheckCircleIcon style={{fontSize: 40, color: fluentColors.success.main}} />
                   </div>
                   <div style={styles.statContent}>
-                    <div style={styles.statLabel}>완료</div>
+                    <div className="stat-label" style={styles.statLabel}>완료</div>
                     <div style={styles.statValue}>{stats.totalDone}</div>
                   </div>
                 </div>
@@ -741,7 +741,7 @@ export default function FluentAdminDashboard() {
           /* 전체 레이아웃 */
           .stats-grid {
             grid-template-columns: 1fr !important;
-            gap: 12px !important;
+            gap: 8px !important;
           }
           .members-grid {
             grid-template-columns: 1fr !important;
@@ -752,39 +752,58 @@ export default function FluentAdminDashboard() {
           
           /* 패딩 최소화 */
           div[style*="padding: 32px"] {
-            padding: 12px !important;
+            padding: 8px !important;
           }
           div[style*="padding: 24px"] {
-            padding: 12px !important;
+            padding: 8px !important;
           }
           div[style*="padding: 20px"] {
-            padding: 10px !important;
+            padding: 8px !important;
+          }
+          div[style*="padding: 16px"] {
+            padding: 8px !important;
           }
           
           /* 제목 및 텍스트 크기 */
           h1 {
-            font-size: 18px !important;
-            line-height: 1.3 !important;
-            word-break: keep-all !important;
-          }
-          h2 {
             font-size: 16px !important;
             line-height: 1.3 !important;
+            word-break: keep-all !important;
+            margin-bottom: 4px !important;
+          }
+          h2 {
+            font-size: 14px !important;
+            line-height: 1.3 !important;
+            margin-bottom: 8px !important;
           }
           h3 {
-            font-size: 14px !important;
+            font-size: 12px !important;
           }
           p {
-            font-size: 13px !important;
-            line-height: 1.5 !important;
+            font-size: 11px !important;
+            line-height: 1.4 !important;
           }
           
-          /* 통계 카드 */
-          div[style*="font-size: 36px"] {
-            font-size: 24px !important;
+          /* 통계 카드 - 대폭 축소 */
+          .stat-card {
+            padding: 8px !important;
+            gap: 4px !important;
+          }
+          .stat-icon {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .stat-icon svg {
+            font-size: 20px !important;
+          }
+          div[style*="font-size: 32px"], div[style*="font-size: 36px"] {
+            font-size: 18px !important;
           }
           div[style*="font-size: 28px"] {
-            font-size: 20px !important;
+            font-size: 16px !important;
+          }
+          .stat-label {
+            font-size: 10px !important;
           }
           
           /* 버튼 */
@@ -904,6 +923,8 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   mainLayout: {
     display: 'flex',
+    minHeight: 'calc(100vh - 64px)',
+    overflow: 'hidden',
   },
 
   content: {
@@ -911,6 +932,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '32px',
     maxWidth: '1600px',
     margin: '0 auto',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    height: 'calc(100vh - 64px)',
+    boxSizing: 'border-box',
   },
 
   pageHeader: {
@@ -937,7 +962,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gridTemplateColumns: 'repeat(6, 1fr)',
     gap: '20px',
     marginBottom: '40px',
-  },
+  } as React.CSSProperties,
 
   statCard: {
     background: fluentColors.neutral[0],
