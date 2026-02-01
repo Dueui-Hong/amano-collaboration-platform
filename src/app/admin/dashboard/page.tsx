@@ -125,7 +125,7 @@ export default function FluentAdminDashboard() {
       const { data: memberList } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'member')
+        .eq('role', '팀원')
         .order('name');
 
       console.log('=== role=member 필터 조회 ===');
