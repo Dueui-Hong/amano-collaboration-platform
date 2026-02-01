@@ -122,7 +122,7 @@ export default function FluentAdminDashboard() {
         });
       }
 
-      const { data: memberList } = await supabase
+      const { data: memberList, error: memberError } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'member')
@@ -131,10 +131,32 @@ export default function FluentAdminDashboard() {
       console.log('=== role=member 필터 조회 ===');
       console.log('조회된 팀원 목록:', memberList);
       console.log('팀원 수:', memberList?.length || 0);
+      console.log('조회 에러:', memberError);
+      
+      // 대소문자 구분 문제 체크
+      if (!memberList || memberList.length === 0) {
+        console.warn('⚠️ role=member로 조회 실패. 다른 값 시도...');
+        
+        // Member, MEMBER, 팀원 등 다양한 값 시도
+        const { data: altMemberList } = await supabase
+          .from('profiles')
+          .select('*')
+          .or('role.eq.Member,role.eq.MEMBER,role.eq.팀원')
+          .order('name');
+        
+        console.log('대체 조회 결과:', altMemberList);
+        
+        if (altMemberList && altMemberList.length > 0) {
+          setMembers(altMemberList);
+          console.log('✅ 대체 조회 성공!');
+          return;
+        }
+      }
       
       setMembers(memberList || []);
 
-      if (memberList) {
+      if (memberList && memberList.length > 0) {
+        console.log('📦 팀원 업무 로딩 시작...');
         const tasksMap: { [key: string]: Task[] } = {};
 
         for (const member of memberList) {
@@ -145,9 +167,13 @@ export default function FluentAdminDashboard() {
             .order('due_date', { ascending: true });
 
           tasksMap[member.id] = tasks || [];
+          console.log(`  - ${member.name}: ${tasks?.length || 0}개 업무`);
         }
 
         setMemberTasks(tasksMap);
+        console.log('✅ 팀원 업무 로딩 완료:', tasksMap);
+      } else {
+        console.warn('⚠️ memberList가 비어있어 업무를 로딩하지 않습니다.');
       }
     } catch (error) {
       console.error('데이터 조회 실패:', error);
