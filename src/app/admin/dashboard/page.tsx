@@ -105,12 +105,30 @@ export default function FluentAdminDashboard() {
 
       setUnassignedTasks(unassigned || []);
 
+      // 먼저 모든 profiles 조회해서 데이터 구조 확인
+      const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('name');
+      
+      console.log('=== Supabase 전체 프로필 조회 ===');
+      console.log('전체 프로필 수:', allProfiles?.length || 0);
+      console.log('전체 프로필 목록:', allProfiles);
+      
+      // role 필드 분석
+      if (allProfiles && allProfiles.length > 0) {
+        allProfiles.forEach((profile: any) => {
+          console.log(`- ${profile.name || profile.email}: role="${profile.role}" (type: ${typeof profile.role})`);
+        });
+      }
+
       const { data: memberList } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'member')
         .order('name');
 
+      console.log('=== role=member 필터 조회 ===');
       console.log('조회된 팀원 목록:', memberList);
       console.log('팀원 수:', memberList?.length || 0);
       
