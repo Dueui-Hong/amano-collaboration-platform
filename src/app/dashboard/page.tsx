@@ -550,133 +550,79 @@ export default function FluentDashboard() {
       </Snackbar>
 
       <style>{`
-        /* 작은 모바일 (360-480px) - 세로 모드 */
-        @media (max-width: 480px) {
-          /* 그리드 1열로 */
-          .stats-grid,
-          .tasks-grid {
-            grid-template-columns: 1fr !important;
-            gap: 8px !important;
-          }
-          
-          /* 헤더 액션 */
-          .header-actions {
-            flex-direction: column !important;
-            width: 100% !important;
-            gap: 8px !important;
-          }
-          
-          /* 패딩 최소화 */
+        /* ============================================ */
+        /* 반응형 CSS - 자연스러운 적응형 레이아웃 */
+        /* ============================================ */
+        
+        /* 작은 모바일 (< 600px) */
+        @media (max-width: 600px) {
+          /* 컨테이너 패딩 조정 */
           div[style*="padding: 32px 24px"] {
-            padding: 8px !important;
+            padding: 16px !important;
           }
           div[style*="padding: 24px"] {
-            padding: 8px !important;
+            padding: 12px !important;
           }
           div[style*="padding: 20px"] {
-            padding: 8px !important;
-          }
-          div[style*="padding: 16px"] {
-            padding: 8px !important;
+            padding: 12px !important;
           }
           
-          /* 제목 크기 */
-          h1 {
-            font-size: 16px !important;
-            line-height: 1.3 !important;
-            margin-bottom: 4px !important;
-          }
-          h2 {
-            font-size: 14px !important;
-            margin-bottom: 8px !important;
-          }
-          h3 {
-            font-size: 12px !important;
-          }
-          p {
-            font-size: 11px !important;
-          }
-          
-          /* 통계 카드 - 대폭 축소 */
-          .stat-card {
-            padding: 8px !important;
-            gap: 4px !important;
-          }
-          .stat-icon {
-            width: 32px !important;
-            height: 32px !important;
-          }
-          .stat-icon svg {
-            font-size: 20px !important;
-          }
-          div[style*="font-size: 40px"] {
-            font-size: 18px !important;
-          }
-          .stat-label {
-            font-size: 10px !important;
-          }
-          
-          /* 버튼 */
-          button {
-            font-size: 12px !important;
-            padding: 10px 12px !important;
-            min-height: 44px !important;
-            width: 100% !important;
-          }
-          
-          /* 칸반 카드 */
-          div[style*="taskCard"] {
-            padding: 8px !important;
-          }
-        }
-        
-        /* 모바일 (481-768px) */
-        @media (min-width: 481px) and (max-width: 768px) {
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .tasks-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .header-actions {
-            flex-direction: column !important;
-            width: 100% !important;
-          }
-          
-          div[style*="padding: 32px 24px"] {
-            padding: 16px 12px !important;
-          }
-          
+          /* 폰트 크기 자동 조정 */
           h1 {
             font-size: 22px !important;
+            line-height: 1.3 !important;
+          }
+          h2 {
+            font-size: 18px !important;
+            line-height: 1.3 !important;
+          }
+          h3 {
+            font-size: 15px !important;
+          }
+          p {
+            font-size: 14px !important;
           }
           
+          /* 통계 카드 */
+          div[style*="fontSize: '40px'"] {
+            font-size: 28px !important;
+          }
+          
+          /* 버튼 터치 영역 확보 */
           button {
-            font-size: 13px !important;
-            padding: 10px 16px !important;
-          }
-        }
-        
-        /* 태블릿 (769-1200px) */
-        @media (min-width: 769px) and (max-width: 1200px) {
-          .tasks-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        
-        /* 세로 모드 전용 */
-        @media (orientation: portrait) and (max-width: 768px) {
-          .stats-grid,
-          .tasks-grid {
-            grid-template-columns: 1fr !important;
+            padding: 12px 20px !important;
+            font-size: 14px !important;
+            min-height: 48px !important;
           }
           
-          /* FAB 위치 조정 */
-          button[aria-label*="주간보고서"] {
-            bottom: 80px !important;
-            right: 16px !important;
-            width: 56px !important;
-            height: 56px !important;
+          /* 헤더 액션 세로 배치 */
+          .header-actions {
+            flex-direction: column !important;
+            gap: 12px !important;
+          }
+          .header-actions button {
+            width: 100% !important;
+          }
+        }
+        
+        /* 중간 모바일 (601-768px) */
+        @media (min-width: 601px) and (max-width: 768px) {
+          h1 {
+            font-size: 26px !important;
+          }
+          h2 {
+            font-size: 20px !important;
+          }
+          
+          div[style*="fontSize: '40px'"] {
+            font-size: 32px !important;
+          }
+        }
+        
+        /* 태블릿 (769-1024px) */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          div[style*="padding: 32px 24px"] {
+            padding: 24px 20px !important;
           }
         }
       `}</style>
@@ -778,7 +724,7 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '24px',
     marginBottom: '32px',
   },
@@ -884,7 +830,7 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   tasksGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '24px',
   },
 

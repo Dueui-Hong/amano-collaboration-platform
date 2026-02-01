@@ -829,91 +829,70 @@ export default function FluentAdminDashboard() {
       </Snackbar>
 
       <style>{`
-        /* 작은 모바일 (360-480px) - 세로 모드 */
-        @media (max-width: 480px) {
-          /* 전체 레이아웃 */
-          .stats-grid {
-            grid-template-columns: 1fr !important;
-            gap: 8px !important;
-          }
-          .members-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .assign-grid {
-            grid-template-columns: 1fr !important;
-          }
-          
-          /* 패딩 최소화 */
+        /* ============================================ */
+        /* 반응형 CSS - 자연스러운 적응형 레이아웃 */
+        /* ============================================ */
+        
+        /* 작은 모바일 (< 600px) */
+        @media (max-width: 600px) {
+          /* 컨테이너 패딩 조정 */
           div[style*="padding: 32px"] {
-            padding: 8px !important;
+            padding: 16px !important;
           }
           div[style*="padding: 24px"] {
-            padding: 8px !important;
+            padding: 12px !important;
           }
           div[style*="padding: 20px"] {
-            padding: 8px !important;
-          }
-          div[style*="padding: 16px"] {
-            padding: 8px !important;
+            padding: 12px !important;
           }
           
-          /* 제목 및 텍스트 크기 */
+          /* 폰트 크기 자동 조정 */
           h1 {
-            font-size: 16px !important;
+            font-size: 20px !important;
             line-height: 1.3 !important;
-            word-break: keep-all !important;
-            margin-bottom: 4px !important;
           }
           h2 {
-            font-size: 14px !important;
+            font-size: 16px !important;
             line-height: 1.3 !important;
-            margin-bottom: 8px !important;
           }
           h3 {
-            font-size: 12px !important;
+            font-size: 14px !important;
           }
           p {
-            font-size: 11px !important;
-            line-height: 1.4 !important;
+            font-size: 13px !important;
           }
           
-          /* 통계 카드 - 대폭 축소 */
-          .stat-card {
-            padding: 8px !important;
-            gap: 4px !important;
-          }
+          /* 통계 카드 아이콘 축소 */
           .stat-icon {
-            width: 32px !important;
-            height: 32px !important;
+            width: 40px !important;
+            height: 40px !important;
           }
           .stat-icon svg {
+            font-size: 24px !important;
+          }
+          
+          /* 통계 값 크기 조정 */
+          div[style*="fontSize: '32px'"] {
+            font-size: 24px !important;
+          }
+          div[style*="fontSize: '36px'"] {
+            font-size: 24px !important;
+          }
+          div[style*="fontSize: '28px'"] {
             font-size: 20px !important;
           }
-          div[style*="font-size: 32px"], div[style*="font-size: 36px"] {
-            font-size: 18px !important;
-          }
-          div[style*="font-size: 28px"] {
-            font-size: 16px !important;
-          }
-          .stat-label {
-            font-size: 10px !important;
-          }
           
-          /* 버튼 */
+          /* 버튼 터치 영역 확보 */
           button {
-            font-size: 12px !important;
-            padding: 10px 16px !important;
-            min-height: 44px !important;
-            gap: 6px !important;
-          }
-          button span {
-            display: inline !important;
+            padding: 12px 20px !important;
+            font-size: 14px !important;
+            min-height: 48px !important;
           }
           button svg {
-            font-size: 16px !important;
+            font-size: 20px !important;
           }
           
-          /* 액션 버튼 그리드 */
+          /* 액션 버튼 세로 배치 */
           .action-buttons {
             flex-direction: column !important;
             gap: 12px !important;
@@ -922,84 +901,58 @@ export default function FluentAdminDashboard() {
             width: 100% !important;
           }
           
+          /* 배지 크기 조정 */
+          div[style*="padding: 4px 12px"] {
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+          }
+          
           /* 드래그 앤 드롭 안내 */
-          div[style*="dragDropGuide"] {
+          div[style*="gap: 20px"][style*="flex"] {
             flex-direction: column !important;
             text-align: center !important;
             padding: 16px !important;
           }
-          
-          /* 업무 카드 */
-          div[style*="taskDragCard"] {
-            padding: 10px !important;
-          }
         }
         
-        /* 모바일 (481-768px) */
-        @media (min-width: 481px) and (max-width: 768px) {
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .members-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .assign-grid {
-            grid-template-columns: 1fr !important;
-          }
-          
-          div[style*="padding: 32px"] {
-            padding: 16px !important;
-          }
-          
+        /* 중간 모바일 (601-768px) */
+        @media (min-width: 601px) and (max-width: 768px) {
+          /* 제목 크기 조정 */
           h1 {
-            font-size: 22px !important;
+            font-size: 24px !important;
           }
           h2 {
             font-size: 18px !important;
           }
           
-          div[style*="font-size: 36px"] {
+          /* 통계 카드 크기 */
+          .stat-icon {
+            width: 50px !important;
+            height: 50px !important;
+          }
+          .stat-icon svg {
             font-size: 28px !important;
           }
           
-          button {
-            font-size: 13px !important;
-            padding: 10px 16px !important;
+          /* 통계 값 */
+          div[style*="fontSize: '32px'"],
+          div[style*="fontSize: '36px'"] {
+            font-size: 28px !important;
           }
         }
         
         /* 태블릿 (769-1024px) */
         @media (min-width: 769px) and (max-width: 1024px) {
-          .stats-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-          .assign-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        
-        /* 대형 태블릿 (1025-1200px) */
-        @media (min-width: 1025px) and (max-width: 1200px) {
-          .stats-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-          .assign-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-        }
-        
-        /* 세로 모드 전용 */
-        @media (orientation: portrait) and (max-width: 768px) {
-          .stats-grid,
-          .members-grid,
-          .assign-grid {
-            grid-template-columns: 1fr !important;
+          /* 패딩 조정 */
+          div[style*="padding: 32px"] {
+            padding: 24px !important;
           }
           
-          /* 액션 버튼 세로 정렬 */
-          div[style*="display: flex"][style*="gap: 16px"] {
-            flex-direction: column !important;
-            align-items: stretch !important;
+          h1 {
+            font-size: 26px !important;
+          }
+          h2 {
+            font-size: 20px !important;
           }
         }
       `}</style>
@@ -1052,7 +1005,7 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(6, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
     gap: '20px',
     marginBottom: '40px',
   } as React.CSSProperties,
@@ -1109,7 +1062,7 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   membersGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '24px',
   },
 
