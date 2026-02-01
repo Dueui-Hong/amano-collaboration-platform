@@ -111,6 +111,9 @@ export default function FluentAdminDashboard() {
         .eq('role', 'member')
         .order('name');
 
+      console.log('조회된 팀원 목록:', memberList);
+      console.log('팀원 수:', memberList?.length || 0);
+      
       setMembers(memberList || []);
 
       if (memberList) {
@@ -450,7 +453,16 @@ export default function FluentAdminDashboard() {
 
               {/* Members Section */}
               <div style={styles.section}>
-                <h2 style={styles.sectionTitle}>👥 팀원별 업무 현황</h2>
+                <h2 style={styles.sectionTitle}>👥 팀원별 업무 현황 ({members.length}명)</h2>
+                {members.length === 0 ? (
+                  <div style={{...styles.alert, ...styles.alertWarning}}>
+                    <div style={styles.alertTitle}>⚠️ 등록된 팀원이 없습니다</div>
+                    <p style={{fontSize: '13px', marginTop: '8px', color: fluentColors.neutral[70]}}>
+                      profiles 테이블에 role='member'인 사용자가 없습니다. 
+                      콘솔을 확인하여 실제 데이터를 점검해주세요.
+                    </p>
+                  </div>
+                ) : (
                 <div style={styles.membersGrid}>
                   {members.map(member => {
                     const memberStats = getMemberStatistics(member.id);
@@ -515,6 +527,7 @@ export default function FluentAdminDashboard() {
                     );
                   })}
                 </div>
+                )}
               </div>
 
               {/* Unassigned Tasks */}
