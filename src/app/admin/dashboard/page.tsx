@@ -554,13 +554,24 @@ export default function FluentAdminDashboard() {
               <div style={styles.dragDropGuide}>
                 <div style={styles.guideIcon}>🖱️</div>
                 <div style={styles.guideContent}>
-                  <h3 style={styles.guideTitle}>드래그 앤 드롭으로 업무 배정하기</h3>
+                  <h3 style={styles.guideTitle}>✨ 드래그 앤 드롭으로 업무 배정하기</h3>
                   <p style={styles.guideText}>
-                    미배정 업무 카드를 <strong>마우스로 드래그</strong>하여 팀원 칸에 <strong>드롭</strong>하세요. 
-                    배정된 업무는 다시 드래그하여 다른 팀원에게 재배정하거나 미배정 칸으로 되돌릴 수 있습니다.
+                    <strong>1단계:</strong> "📥 미배정 업무" 칸에서 배정할 업무 카드를 클릭하여 잡으세요<br />
+                    <strong>2단계:</strong> 마우스를 누른 채로 아래에 있는 <strong style={{color: fluentColors.primary[600]}}>👤 팀원 이름</strong> 칸으로 드래그하세요<br />
+                    <strong>3단계:</strong> 팀원 칸 위에서 마우스를 놓으면 배정 완료!<br />
+                    💡 <em>팁: 이미 배정된 업무도 다른 팀원에게 드래그하여 재배정할 수 있습니다</em>
                   </p>
                 </div>
               </div>
+
+              {members.length === 0 && (
+                <div style={{...styles.alert, ...styles.alertWarning, marginBottom: '24px'}}>
+                  <span style={styles.alertTitle}>⚠️ 팀원이 등록되지 않았습니다</span>
+                  <p style={{fontSize: '13px', marginTop: '8px', color: fluentColors.neutral[70]}}>
+                    업무를 배정하려면 먼저 팀원을 등록해주세요. 현재는 미배정 업무 칸만 표시됩니다.
+                  </p>
+                </div>
+              )}
 
               <DragDropContext onDragEnd={onDragEnd}>
               <div className="assign-grid" style={styles.assignGrid}>
@@ -618,35 +629,59 @@ export default function FluentAdminDashboard() {
                 </div>
 
                 {/* Member Columns */}
-                {members.map(member => {
-                  const tasks = memberTasks[member.id] || [];
-                  const memberStats = getMemberStatistics(member.id);
-                  
-                  return (
-                    <div key={member.id} style={styles.assignColumn}>
-                      <div style={{...styles.assignHeader, background: `linear-gradient(135deg, ${fluentColors.primary[400]}, ${fluentColors.primary[600]})`}}>
-                        <div>
-                          <div style={styles.assignHeaderTitle}>{member.name}</div>
-                          <div style={styles.assignHeaderSubtitle}>{member.position}</div>
+                {members.length === 0 ? (
+                  <div style={styles.emptyMemberColumn}>
+                    <div style={{fontSize: '48px', marginBottom: '16px'}}>👥</div>
+                    <h3 style={{fontSize: '18px', fontWeight: 600, color: fluentColors.neutral[80], marginBottom: '8px'}}>
+                      등록된 팀원이 없습니다
+                    </h3>
+                    <p style={{fontSize: '14px', color: fluentColors.neutral[60]}}>
+                      팀원을 등록하면 업무를 배정할 수 있습니다.
+                    </p>
+                  </div>
+                ) : (
+                  members.map(member => {
+                    const tasks = memberTasks[member.id] || [];
+                    const memberStats = getMemberStatistics(member.id);
+                    
+                    return (
+                      <div key={member.id} style={styles.assignColumn}>
+                        <div style={{...styles.assignHeader, background: `linear-gradient(135deg, ${fluentColors.primary[400]}, ${fluentColors.primary[600]})`}}>
+                          <div>
+                            <div style={styles.assignHeaderTitle}>👤 {member.name}</div>
+                            <div style={styles.assignHeaderSubtitle}>{member.position || '팀원'}</div>
+                          </div>
+                          <span style={styles.assignHeaderBadge}>{tasks.length}개</span>
                         </div>
-                        <span style={styles.assignHeaderBadge}>{tasks.length}</span>
-                      </div>
-                      <div style={styles.assignMemberStats}>
-                        <span style={{...styles.assignStatBadge, background: fluentColors.warning.main}}>Todo: {memberStats.todo}</span>
-                        <span style={{...styles.assignStatBadge, background: fluentColors.info.main}}>Doing: {memberStats.doing}</span>
-                        <span style={{...styles.assignStatBadge, background: fluentColors.success.main}}>Done: {memberStats.done}</span>
-                      </div>
-                      <Droppable droppableId={member.id}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            style={{
-                              ...styles.assignDropzone,
-                              background: snapshot.isDraggingOver ? fluentColors.success[50] : 'transparent',
-                            }}
-                          >
-                            {tasks.map((task, index) => (
+                        <div style={styles.assignMemberStats}>
+                          <span style={{...styles.assignStatBadge, background: fluentColors.warning.main}}>Todo: {memberStats.todo}</span>
+                          <span style={{...styles.assignStatBadge, background: fluentColors.info.main}}>Doing: {memberStats.doing}</span>
+                          <span style={{...styles.assignStatBadge, background: fluentColors.success.main}}>Done: {memberStats.done}</span>
+                        </div>
+                        <Droppable droppableId={member.id}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              style={{
+                                ...styles.assignDropzone,
+                                background: snapshot.isDraggingOver 
+                                  ? `linear-gradient(135deg, ${fluentColors.success[50]}, ${fluentColors.success[100]})`
+                                  : 'transparent',
+                                border: snapshot.isDraggingOver 
+                                  ? `2px dashed ${fluentColors.success.main}`
+                                  : '2px dashed transparent',
+                              }}
+                            >
+                              {tasks.length === 0 && (
+                                <div style={styles.emptyDropzone}>
+                                  <div style={{fontSize: '32px', marginBottom: '8px'}}>📥</div>
+                                  <p style={{fontSize: '12px', color: fluentColors.neutral[60], textAlign: 'center'}}>
+                                    여기로 업무를<br />드래그하세요
+                                  </p>
+                                </div>
+                              )}
+                              {tasks.map((task, index) => (
                               <Draggable key={task.id} draggableId={task.id} index={index}>
                                 {(provided, snapshot) => (
                                   <div
@@ -686,7 +721,8 @@ export default function FluentAdminDashboard() {
                       </Droppable>
                     </div>
                   );
-                })}
+                })
+                )}
               </div>
             </DragDropContext>
             </>
@@ -1389,5 +1425,22 @@ const styles: { [key: string]: React.CSSProperties } = {
 
   buttonIcon: {
     fontSize: '20px',
+  },
+
+  emptyMemberColumn: {
+    gridColumn: '1 / -1',
+    padding: '60px 20px',
+    textAlign: 'center',
+    background: fluentColors.neutral[10],
+    borderRadius: fluentRadius.xl,
+    border: `2px dashed ${fluentColors.neutral[40]}`,
+  },
+
+  emptyDropzone: {
+    padding: '40px 20px',
+    textAlign: 'center',
+    borderRadius: fluentRadius.md,
+    background: fluentColors.neutral[10],
+    border: `2px dashed ${fluentColors.neutral[30]}`,
   },
 };
