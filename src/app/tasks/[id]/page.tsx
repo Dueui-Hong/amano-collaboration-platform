@@ -49,9 +49,11 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState<Task | null>(null);
   const [assignee, setAssignee] = useState<Profile | null>(null);
   const [userInfo, setUserInfo] = useState<Profile | null>(null);
+  const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -83,6 +85,17 @@ export default function TaskDetailPage() {
 
       if (profile) {
         setUserInfo(profile);
+      }
+
+      // 관리자인 경우 팀원 목록 조회
+      if (profile?.role === 'admin') {
+        const { data: memberList } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'member')
+          .order('name');
+        
+        setMembers(memberList || []);
       }
 
       const { data: taskData, error: taskError } = await supabase
@@ -142,6 +155,41 @@ export default function TaskDetailPage() {
     } catch (error) {
       console.error('상태 변경 실패:', error);
       showSnackbar('상태 변경에 실패했습니다.', 'error');
+    }
+  };
+
+  const changeAssignee = async (newAssigneeId: string | null) => {
+    if (!task || !userInfo) return;
+
+    if (userInfo.role !== 'admin') {
+      showSnackbar('관리자만 담당자를 변경할 수 있습니다.', 'error');
+      return;
+    }
+
+    try {
+      const updateData: Partial<Task> = {
+        assignee_id: newAssigneeId,
+        status: newAssigneeId ? 'Todo' : 'Unassigned',
+      };
+
+      const { error } = await supabase
+        .from('tasks')
+        .update(updateData)
+        .eq('id', task.id);
+
+      if (error) throw error;
+
+      const newAssignee = members.find(m => m.id === newAssigneeId);
+      const message = newAssigneeId 
+        ? `${newAssignee?.name}님에게 배정되었습니다!`
+        : '미배정 상태로 변경되었습니다.';
+
+      showSnackbar(message, 'success');
+      setAssignDialogOpen(false);
+      fetchTaskDetail();
+    } catch (error) {
+      console.error('담당자 변경 실패:', error);
+      showSnackbar('담당자 변경에 실패했습니다.', 'error');
     }
   };
 
@@ -419,17 +467,25 @@ export default function TaskDetailPage() {
                 </div>
 
                 {/* 배정된 팀원 */}
-                {assignee && (
-                  <div style={styles.infoRow}>
-                    <PersonIcon style={{...styles.infoIcon, color: fluentColors.primary[500]}} />
-                    <div style={styles.infoContent}>
-                      <span style={styles.infoLabel}>배정된 팀원</span>
+                <div style={styles.infoRow}>
+                  <PersonIcon style={{...styles.infoIcon, color: fluentColors.primary[500]}} />
+                  <div style={{...styles.infoContent, flex: 1}}>
+                    <span style={styles.infoLabel}>배정된 팀원</span>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px'}}>
                       <span style={styles.infoValue}>
-                        {assignee.name} ({assignee.position})
+                        {assignee ? `${assignee.name} (${assignee.position})` : '미배정'}
                       </span>
+                      {userInfo?.role === 'admin' && (
+                        <button
+                          onClick={() => setAssignDialogOpen(true)}
+                          style={styles.changeAssigneeButton}
+                        >
+                          {assignee ? '담당자 변경' : '담당자 배정'}
+                        </button>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* 완료 시각 */}
                 {task.completed_at && (
@@ -604,6 +660,97 @@ export default function TaskDetailPage() {
         <DialogActions>
           <button onClick={() => setSelectedImage(null)} style={styles.dialogButton}>
             닫기
+          </button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 담당자 변경 Dialog */}
+      <Dialog
+        open={assignDialogOpen}
+        onClose={() => setAssignDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent style={{padding: '32px'}}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            color: fluentColors.neutral[100],
+            marginBottom: '8px',
+          }}>
+            담당자 {assignee ? '변경' : '배정'}
+          </h3>
+          <p style={{
+            fontSize: '14px',
+            color: fluentColors.neutral[70],
+            marginBottom: '24px',
+          }}>
+            업무를 담당할 팀원을 선택하세요.
+          </p>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+          }}>
+            {/* 미배정 옵션 */}
+            <button
+              onClick={() => changeAssignee(null)}
+              style={{
+                ...styles.assigneeOption,
+                border: !assignee ? `2px solid ${fluentColors.primary[500]}` : `1px solid ${fluentColors.neutral[30]}`,
+                background: !assignee ? fluentColors.primary[50] : fluentColors.neutral[0],
+              }}
+            >
+              <div style={styles.assigneeAvatar}>
+                <PersonIcon style={{fontSize: 24, color: fluentColors.neutral[60]}} />
+              </div>
+              <div style={styles.assigneeInfo}>
+                <div style={styles.assigneeName}>미배정</div>
+                <div style={styles.assigneePosition}>담당자 없음</div>
+              </div>
+              {!assignee && (
+                <CheckCircleIcon style={{fontSize: 24, color: fluentColors.primary[500]}} />
+              )}
+            </button>
+
+            {/* 팀원 목록 */}
+            {members.map(member => {
+              const isSelected = assignee?.id === member.id;
+              return (
+                <button
+                  key={member.id}
+                  onClick={() => changeAssignee(member.id)}
+                  style={{
+                    ...styles.assigneeOption,
+                    border: isSelected ? `2px solid ${fluentColors.primary[500]}` : `1px solid ${fluentColors.neutral[30]}`,
+                    background: isSelected ? fluentColors.primary[50] : fluentColors.neutral[0],
+                  }}
+                >
+                  <div style={{
+                    ...styles.assigneeAvatar,
+                    background: `linear-gradient(135deg, ${fluentColors.primary[400]}, ${fluentColors.primary[600]})`,
+                  }}>
+                    {member.name.charAt(0)}
+                  </div>
+                  <div style={styles.assigneeInfo}>
+                    <div style={styles.assigneeName}>{member.name}</div>
+                    <div style={styles.assigneePosition}>{member.position}</div>
+                  </div>
+                  {isSelected && (
+                    <CheckCircleIcon style={{fontSize: 24, color: fluentColors.primary[500]}} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+        <DialogActions style={{padding: '16px 32px'}}>
+          <button
+            onClick={() => setAssignDialogOpen(false)}
+            style={{...styles.dialogButton, ...styles.cancelButton}}
+          >
+            취소
           </button>
         </DialogActions>
       </Dialog>
@@ -1050,5 +1197,67 @@ const styles: { [key: string]: React.CSSProperties } = {
     background: `linear-gradient(135deg, #f44336, #d32f2f)`,
     color: '#FFFFFF',
     border: 'none',
+  },
+
+  cancelButton: {
+    border: `2px solid ${fluentColors.neutral[30]}`,
+  },
+
+  // 담당자 변경 버튼
+  changeAssigneeButton: {
+    padding: '6px 16px',
+    background: `linear-gradient(135deg, ${fluentColors.primary[500]}, ${fluentColors.primary[700]})`,
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: fluentRadius.md,
+    fontSize: '13px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    boxShadow: fluentShadows.neumorph2,
+    whiteSpace: 'nowrap',
+  },
+
+  // 담당자 옵션
+  assigneeOption: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    padding: '16px',
+    borderRadius: fluentRadius.lg,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    boxShadow: fluentShadows.neumorph2,
+  },
+
+  assigneeAvatar: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    background: fluentColors.neutral[20],
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    fontWeight: 700,
+    color: '#FFFFFF',
+    flexShrink: 0,
+  },
+
+  assigneeInfo: {
+    flex: 1,
+    textAlign: 'left',
+  },
+
+  assigneeName: {
+    fontSize: '16px',
+    fontWeight: 600,
+    color: fluentColors.neutral[100],
+    marginBottom: '2px',
+  },
+
+  assigneePosition: {
+    fontSize: '13px',
+    color: fluentColors.neutral[70],
   },
 };
