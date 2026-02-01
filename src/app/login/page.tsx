@@ -56,7 +56,7 @@ export default function FluentLoginPage() {
           .single();
 
         if (profile) {
-          if (profile.role === '관리자' || profile.role === 'admin') {
+          if (profile.role === 'admin') {
             router.push('/admin/dashboard');
           } else {
             router.push('/dashboard');
