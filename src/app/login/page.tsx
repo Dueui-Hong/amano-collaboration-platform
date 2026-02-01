@@ -70,10 +70,7 @@ export default function FluentLoginPage() {
     }
   };
 
-  const quickLogin = (userEmail: string, userPassword: string) => {
-    setEmail(userEmail);
-    setPassword(userPassword);
-  };
+
 
   return (
     <div style={styles.container}>
@@ -213,37 +210,6 @@ export default function FluentLoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Divider */}
-            <div style={styles.divider}>
-              <span style={styles.dividerLine} />
-              <span style={styles.dividerText}>빠른 로그인</span>
-              <span style={styles.dividerLine} />
-            </div>
-
-            {/* Quick Login Buttons */}
-            <div style={styles.quickLoginSection}>
-              <button
-                type="button"
-                onClick={() => quickLogin('minseok_kim1@amano.co.kr', '1111')}
-                className="quick-button"
-                style={styles.quickButton}
-                disabled={loading}
-              >
-                <span className="quick-button-icon" style={styles.quickButtonIcon}>👨‍💼</span>
-                <span className="quick-button-text" style={styles.quickButtonText}>관리자</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => quickLogin('dueui_hong@amano.co.kr', '1111')}
-                className="quick-button"
-                style={styles.quickButton}
-                disabled={loading}
-              >
-                <span className="quick-button-icon" style={styles.quickButtonIcon}>👤</span>
-                <span className="quick-button-text" style={styles.quickButtonText}>팀원</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -771,53 +737,4 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
   },
-
-  divider: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    margin: '32px 0 24px',
-  },
-
-  dividerLine: {
-    flex: 1,
-    height: '1px',
-    background: fluentColors.neutral[30],
-  },
-
-  dividerText: {
-    fontSize: '13px',
-    color: fluentColors.neutral[60],
-    fontWeight: 500,
-  },
-
-  quickLoginSection: {
-    display: 'flex',
-    gap: '12px',
-  },
-
-  quickButton: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '16px',
-    border: `2px solid ${fluentColors.neutral[30]}`,
-    borderRadius: fluentRadius.md,
-    background: fluentColors.neutral[10],
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    boxShadow: fluentShadows.neumorph1,
-  } as React.CSSProperties,
-
-  quickButtonIcon: {
-    fontSize: '32px',
-  } as React.CSSProperties,
-
-  quickButtonText: {
-    fontSize: '14px',
-    fontWeight: 600,
-    color: fluentColors.neutral[80],
-  } as React.CSSProperties,
 };

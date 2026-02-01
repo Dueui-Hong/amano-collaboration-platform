@@ -139,8 +139,12 @@ export default function TaskDetailPage() {
     try {
       const updateData: Partial<Task> = { status };
 
+      // 완료로 변경 시 완료 시각 기록
       if (status === 'Done') {
         updateData.completed_at = new Date().toISOString();
+      } else {
+        // Todo 또는 Doing으로 변경 시 완료 시각 삭제
+        updateData.completed_at = null;
       }
 
       const { error } = await supabase

@@ -98,26 +98,26 @@ export default function SettingsPage() {
         throw new Error('사용자 정보를 찾을 수 없습니다.');
       }
 
-      // 현재 비밀번호 확인
+      // 현재 비밀번호 확인 (재인증)
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword,
       });
 
       if (signInError) {
-        setMessage({ type: 'error', text: '현재 비밀번호가 올바르지 않습니다.' });
+        setMessage({ type: 'error', text: '❌ 현재 비밀번호가 올바르지 않습니다.' });
         setSaving(false);
         return;
       }
 
-      // 비밀번호 업데이트
+      // Supabase Authentication 비밀번호 업데이트
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (updateError) throw updateError;
 
-      setMessage({ type: 'success', text: '✅ 비밀번호가 성공적으로 변경되었습니다!' });
+      setMessage({ type: 'success', text: '✅ 비밀번호가 성공적으로 변경되었습니다! Supabase Authentication에 반영되었습니다.' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -129,12 +129,12 @@ export default function SettingsPage() {
         } else {
           router.push('/dashboard');
         }
-      }, 2000);
+      }, 3000);
     } catch (error: any) {
       console.error('비밀번호 변경 실패:', error);
       setMessage({ 
         type: 'error', 
-        text: error.message || '비밀번호 변경에 실패했습니다.' 
+        text: `❌ ${error.message || '비밀번호 변경에 실패했습니다.'}` 
       });
     } finally {
       setSaving(false);
