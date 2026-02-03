@@ -78,6 +78,21 @@ export default function FluentAdminDashboard() {
     fetchData();
   }, []);
 
+  // 이번 주의 시작(월요일)과 끝(일요일) 계산
+  const getThisWeekRange = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0(일) ~ 6(토)
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    
+    return { start: monday.toISOString(), end: sunday.toISOString() };
+  };
+
   const fetchData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -97,10 +112,15 @@ export default function FluentAdminDashboard() {
         setUserInfo(profile);
       }
 
+      // 이번 주 범위 계산
+      const { start } = getThisWeekRange();
+
+      // 미배정 업무: 이번 주 마감 + 미완료 과거 업무
       const { data: unassigned } = await supabase
         .from('tasks')
         .select('*')
         .is('assignee_id', null)
+        .gte('due_date', start)
         .order('due_date', { ascending: true });
 
       setUnassignedTasks(unassigned || []);
@@ -160,10 +180,13 @@ export default function FluentAdminDashboard() {
         const tasksMap: { [key: string]: Task[] } = {};
 
         for (const member of memberList) {
+          // 완료된 업무(Done)는 제외하고, 이번 주 마감 업무 조회
           const { data: tasks } = await supabase
             .from('tasks')
             .select('*')
             .eq('assignee_id', member.id)
+            .neq('status', 'Done')
+            .gte('due_date', start)
             .order('due_date', { ascending: true });
 
           tasksMap[member.id] = tasks || [];

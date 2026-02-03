@@ -65,6 +65,21 @@ export default function FluentDashboard() {
     fetchUserAndTasks();
   }, []);
 
+  // 이번 주의 시작(월요일)과 끝(일요일) 계산
+  const getThisWeekRange = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0(일) ~ 6(토)
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    
+    return { start: monday.toISOString(), end: sunday.toISOString() };
+  };
+
   const fetchUserAndTasks = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -84,10 +99,15 @@ export default function FluentDashboard() {
         setUserInfo(profile);
       }
 
+      // 이번 주 범위 계산
+      const { start, end } = getThisWeekRange();
+
+      // 이번 주 마감 업무 + 미완료 과거 업무 조회
       const { data } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee_id', user.id)
+        .or(`due_date.gte.${start},and(due_date.lt.${start},status.neq.Done)`)
         .order('due_date', { ascending: true });
 
       setTasks(data || []);
@@ -110,7 +130,19 @@ export default function FluentDashboard() {
     setCreatingTask(true);
 
     try {
-      const { error } = await supabase.from('tasks').insert({
+      console.log('=== 새 업무 생성 시도 ===');
+      console.log('입력 데이터:', {
+        title: newTask.title,
+        category: newTask.category,
+        requester_dept: newTask.requester_dept || userInfo.department || '기획홍보팀',
+        requester_name: newTask.requester_name || userInfo.name,
+        description: newTask.description,
+        due_date: newTask.due_date,
+        status: 'Todo',
+        assignee_id: userInfo.id,
+      });
+
+      const { data, error } = await supabase.from('tasks').insert({
         title: newTask.title,
         category: newTask.category,
         requester_dept: newTask.requester_dept || userInfo.department || '기획홍보팀',
@@ -120,10 +152,14 @@ export default function FluentDashboard() {
         status: 'Todo',
         assignee_id: userInfo.id,
         image_urls: [],
-      });
+      }).select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase 에러:', error);
+        throw error;
+      }
 
+      console.log('✅ 업무 생성 성공:', data);
       showSnackbar('새 업무가 등록되었습니다!', 'success');
       setShowNewTaskModal(false);
       setNewTask({
@@ -135,9 +171,10 @@ export default function FluentDashboard() {
         due_date: '',
       });
       fetchUserAndTasks();
-    } catch (error) {
-      console.error('업무 생성 실패:', error);
-      showSnackbar('업무 생성에 실패했습니다.', 'error');
+    } catch (error: any) {
+      console.error('❌ 업무 생성 실패:', error);
+      const errorMessage = error.message || error.hint || '업무 생성에 실패했습니다.';
+      showSnackbar(`업무 생성 실패: ${errorMessage}`, 'error');
     } finally {
       setCreatingTask(false);
     }
